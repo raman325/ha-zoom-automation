@@ -8,9 +8,10 @@
     },
     "abort": {
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]"
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
-    "create_entry": {
+      "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   }

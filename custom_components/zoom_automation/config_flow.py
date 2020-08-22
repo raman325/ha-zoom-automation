@@ -21,3 +21,11 @@ class OAuth2FlowHandler(
     def logger(self) -> logging.Logger:
         """Return logger."""
         return _LOGGER
+
+    async def async_step_user(self, user_input=None):
+        """Handle a flow start."""
+        # Only allow 1 instance.
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        return await super().async_step_user(user_input)

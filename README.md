@@ -44,16 +44,17 @@ Your Home Assistant instance must be externally accessible from the Internet.
 ### Configure HomeAssistant
 
 1. Click Install
-2. Create a new top level configuration item in `configuration.yaml` as follows:
+2. Create a new top level configuration item in `configuration.yaml` as follows (you may need to restart your HA instance to pick up the changes once they are added):
 ```yaml
-zoom-automation:
-  client_id: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
-  client_secret: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
+zoom_automation:
+    client_id: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
+    client_secret: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
 ```
 3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
-4. If you are not already logged into Zoom, you will be asked to log in.
-5. Authorize the app for the `Scopes` that were configured earlier.
-6. Start automating!
+4. You will be asked to provide the `Client ID` and `Client Secret` from earlier. Enter them in and click `Submit`.
+5. If you are not already logged into Zoom, you will be asked to log in.
+6. Authorize the app for the `Scopes` that were configured earlier.
+7. Start automating!
 
 {% endif %}
 
@@ -90,8 +91,8 @@ You will likely want to act on information in `trigger.json.payload.object`, eit
 ***
 
 [zoom]: https://zoom.us/
-[commits-shield]: https://img.shields.io/github/commit-activity/y/raman325/ha-zoom-automation.svg?style=for-the-badge
-[commits]: https://github.com/raman325/ha-zoom-automation/commits/master
+[commits-shield]: https://img.shields.io/github/commit-activity/y/raman325/ha-zoom_automation.svg?style=for-the-badge
+[commits]: https://github.com/raman325/ha-zoom_automation/commits/master
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
 [discord]: https://discord.gg/Qa5fW2R
@@ -99,6 +100,6 @@ You will likely want to act on information in `trigger.json.payload.object`, eit
 [exampleimg]: example.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
-[license-shield]: https://img.shields.io/github/license/raman325/ha-zoom-automation.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/raman325/ha-zoom_automation.svg?style=for-the-badge
 [maintenance-shield]: https://img.shields.io/badge/maintainer-%40raman325-blue
-[last-commit-shield]: https://img.shields.io/github/last-commit/raman325/ha-zoom-automation?style=for-the-badge
+[last-commit-shield]: https://img.shields.io/github/last-commit/raman325/ha-zoom_automation?style=for-the-badge

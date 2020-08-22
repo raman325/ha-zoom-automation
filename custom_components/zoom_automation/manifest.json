@@ -1,0 +1,10 @@
+{
+  "domain": "zoom_automation",
+  "name": "Zoom Automation",
+  "config_flow": true,
+  "documentation": "https://github.com/raman325/ha-zoom_automation",
+  "issue_tracker": "https://github.com/raman325/ha-zoom_automation/issues",
+  "codeowners": [
+    "@raman325"
+  ]
+}

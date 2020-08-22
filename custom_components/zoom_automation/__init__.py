@@ -1,32 +1,22 @@
 """The Zoom Automation integration."""
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    config_entry_oauth2_flow,
-    config_validation as cv,
-)
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.network import get_url
+import voluptuous as vol
 
 from . import api, config_flow
 from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
-CONFIG_SCHEMA = vol.Schema(
+ZOOM_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+        vol.Required(CONF_CLIENT_ID): vol.Coerce(str),
+        vol.Required(CONF_CLIENT_SECRET): vol.Coerce(str),
+    }
 )
+
+CONFIG_SCHEMA = vol.Schema({DOMAIN: ZOOM_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
 class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
