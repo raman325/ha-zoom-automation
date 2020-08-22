@@ -1,11 +1,8 @@
 {
-    "name": "Blueprint",
+    "name": "Zoom Automation",
     "hacs": "0.24.0",
-    "domains": [
-        "binary_sensor",
-        "sensor",
-        "switch"
-    ],
-    "iot_class": "Cloud Polling",
+    "domains": [],
+    "iot_class": "Cloud Push",
+    "render_readme": true,
     "homeassistant": "0.110.0"
 }
