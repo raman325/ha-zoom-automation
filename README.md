@@ -91,8 +91,8 @@ You will likely want to act on information in `trigger.json.payload.object`, eit
 ***
 
 [zoom]: https://zoom.us/
-[commits-shield]: https://img.shields.io/github/commit-activity/y/raman325/ha-zoom_automation.svg?style=for-the-badge
-[commits]: https://github.com/raman325/ha-zoom_automation/commits/master
+[commits-shield]: https://img.shields.io/github/commit-activity/y/raman325/ha-zoom-automation.svg?style=for-the-badge
+[commits]: https://github.com/raman325/ha-zoom-automation/commits/master
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
 [discord]: https://discord.gg/Qa5fW2R
@@ -100,6 +100,6 @@ You will likely want to act on information in `trigger.json.payload.object`, eit
 [exampleimg]: example.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
-[license-shield]: https://img.shields.io/github/license/raman325/ha-zoom_automation.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/raman325/ha-zoom-automation.svg?style=for-the-badge
 [maintenance-shield]: https://img.shields.io/badge/maintainer-%40raman325-blue
-[last-commit-shield]: https://img.shields.io/github/last-commit/raman325/ha-zoom_automation?style=for-the-badge
+[last-commit-shield]: https://img.shields.io/github/last-commit/raman325/ha-zoom-automation?style=for-the-badge
