@@ -2,7 +2,10 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
 from homeassistant.helpers.network import get_url
 import voluptuous as vol
 
@@ -19,7 +22,9 @@ ZOOM_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema({DOMAIN: ZOOM_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
-class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+class ZoomOAuth2Implementation(
+    config_entry_oauth2_flow.LocalOAuth2Implementation
+):
     """Oauth2 implementation that only uses the external url."""
 
     @property
@@ -57,7 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass, entry
     )
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    session = config_entry_oauth2_flow.OAuth2Session(
+        hass, entry, implementation
+    )
 
     hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(session)
 
