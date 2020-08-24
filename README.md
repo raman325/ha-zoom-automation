@@ -2,8 +2,8 @@
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
 
-[![hacs][hacsbadge]](hacs)
-![Project Maintenance][maintenance-shield]
+[![hacs][hacsbadge]](hacs.json)
+[![Project Maintenance][maintenance-shield]](https://github.com/raman325)
 
 [![Discord][discord-shield]][discord]
 [![Community Forum][forum-shield]][forum]
@@ -36,7 +36,7 @@ Your Home Assistant instance must be externally accessible from the Internet.
 8. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
 9. Enter a name for this subscription (does not matter).
 10. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/webhook/<WEBHOOK_ID>`. Use any ID that you already aren't using in your Home Assistant instance. I generated mine using a [GUID Generator](https://www.guidgenerator.com/). Remember this ID for later.
-11. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. For my example from earlier, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`.
+11. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. For my example from earlier, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`. If you want to get more details about when you start a meeting, add `Start Meeting` under `Meeting`.
 12. Once you are done, click `Done`, then `Save` the subscription before hitting `Continue`.
 13. The `Scopes` section should already be updated to the permissions the app would need for the events you selected earlier. Click `Continue`.
 14. You are now ready to configure Home Assistant!
@@ -86,6 +86,40 @@ condition:
 
 You will likely want to act on information in `trigger.json.payload.object`, either in a `condition` or an `action`. Be sure to use `value_template` and `data_template` when accessing this information in your configured automation.
 
+You can use some `input_text`s with an automation too, like this:
+
+<details><summary>Expand</summary>
+
+```yaml
+- alias: Zoom status updates
+  description: ''
+  trigger:
+  - platform: webhook
+    webhook_id: b44915ce-7a7a-43c8-953a-23c35d790097
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.json.event == "user.presence_status_updated" }}'
+      sequence:
+      - data_template:
+          entity_id: input_text.zoom_status
+          value: '{{ trigger.json.payload.object.presence_status }}'
+        service: input_text.set_value
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.json.event == "meeting.started" }}'
+      sequence:
+      - data_template:
+          entity_id: input_text.zoom_meeting
+          value: '{{ trigger.json.payload.object.topic }}'
+        service: input_text.set_value
+  mode: single
+```
+
+</details>
+
 <!---->
 
 ***
@@ -93,7 +127,6 @@ You will likely want to act on information in `trigger.json.payload.object`, eit
 [zoom]: https://zoom.us/
 [commits-shield]: https://img.shields.io/github/commit-activity/y/raman325/ha-zoom-automation.svg?style=for-the-badge
 [commits]: https://github.com/raman325/ha-zoom-automation/commits/master
-[hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
 [discord]: https://discord.gg/Qa5fW2R
 [discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
@@ -101,5 +134,5 @@ You will likely want to act on information in `trigger.json.payload.object`, eit
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
 [license-shield]: https://img.shields.io/github/license/raman325/ha-zoom-automation.svg?style=for-the-badge
-[maintenance-shield]: https://img.shields.io/badge/maintainer-%40raman325-blue
+[maintenance-shield]: https://img.shields.io/badge/maintainer-%40raman325-blue?style=for-the-badge
 [last-commit-shield]: https://img.shields.io/github/last-commit/raman325/ha-zoom-automation?style=for-the-badge
