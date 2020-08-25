@@ -5,27 +5,16 @@
       "user": {
         "title": "Connect to a new Zoom app",
         "data": {
-          "alias": "Alias for app",
           "client_id": "Client ID (obtained from Zoom app)",
           "client_secret": "Client Secret (obtained from Zoom app)"
         }
       },
-      "user_choose_implementation": {
-        "title": "Pick Existing App to Authenticate With",
-        "description": "To define a new app, select (Create New App)",
+      "choose_name": {
+        "title": "Create a name for your account",
         "data": {
-          "implementation": "App"
-        }
-      },
-      "pick_implementation": {
-        "title": "Pick App to Authenticate With",
-        "data": {
-          "implementation": "App"
+          "name": "Account Name"
         }
       }
-    },
-    "error": {
-      "unique_name_required": "A unique case insensitive name is required for each Zoom app/account you connect to."
     },
     "abort": {
       "single_instance_allowed": "Already configured. Only a single configuration possible.",
