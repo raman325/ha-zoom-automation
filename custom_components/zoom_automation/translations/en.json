@@ -6,6 +6,9 @@
         "title": "Pick Authentication Method"
       }
     },
+    "error": {
+      "unique_name_required": "A unique case insensitive name is required for each Zoom app/account you connect to."
+    },
     "abort": {
       "single_instance_allowed": "Already configured. Only a single configuration possible.",
       "missing_configuration": "The component is not configured. Please follow the documentation.",

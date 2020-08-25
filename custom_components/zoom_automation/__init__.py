@@ -1,57 +1,57 @@
 """The Zoom Automation integration."""
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from logging import getLogger
+from typing import Dict, List
+
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    config_entry_oauth2_flow,
-    config_validation as cv,
-)
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 import voluptuous as vol
 
 from . import api, config_flow
-from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .common import ZoomOAuth2Implementation
+from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN, ZOOM_SCHEMA
 
-ZOOM_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_CLIENT_ID): vol.Coerce(str),
-        vol.Required(CONF_CLIENT_SECRET): vol.Coerce(str),
-    }
+_LOGGER = getLogger(__name__)
+
+
+def validate_unique_names(config: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """Validate CONF_NAME is unique for every entry."""
+    slug_names = [slugify(zoom_config[CONF_NAME]) for zoom_config in config]
+    if len(set(slug_names)) != len(slug_names):
+        raise vol.Invalid(f"'{CONF_NAME}' must be unique for every entry.")
+    return config
+
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.All(cv.ensure_list, [vol.All(ZOOM_SCHEMA)], validate_unique_names)},
+    extra=vol.ALLOW_EXTRA,
 )
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: ZOOM_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
-
-class ZoomOAuth2Implementation(
-    config_entry_oauth2_flow.LocalOAuth2Implementation
-):
-    """Oauth2 implementation that only uses the external url."""
-
-    @property
-    def redirect_uri(self) -> str:
-        """Return the redirect uri."""
-        url = get_url(self.hass, allow_internal=False, prefer_cloud=True)
-        return f"{url}{config_entry_oauth2_flow.AUTH_CALLBACK_PATH}"
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType):
     """Set up the Zoom Automation component."""
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     if DOMAIN not in config:
         return True
 
-    config_flow.OAuth2FlowHandler.async_register_implementation(
-        hass,
-        ZoomOAuth2Implementation(
+    for zoom_config in config[DOMAIN]:
+        config_flow.OAuth2FlowHandler.async_register_implementation(
             hass,
-            DOMAIN,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE,
-            OAUTH2_TOKEN,
-        ),
-    )
+            ZoomOAuth2Implementation(
+                hass,
+                DOMAIN,
+                zoom_config[CONF_NAME],
+                zoom_config[CONF_CLIENT_ID],
+                zoom_config[CONF_CLIENT_SECRET],
+                OAUTH2_AUTHORIZE,
+                OAUTH2_TOKEN,
+            ),
+        )
+        hass.data[DOMAIN][SOURCE_IMPORT] = True
 
     return True
 
@@ -62,9 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass, entry
     )
 
-    session = config_entry_oauth2_flow.OAuth2Session(
-        hass, entry, implementation
-    )
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
     hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(session)
 
@@ -74,5 +72,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     hass.data[DOMAIN].pop(entry.entry_id)
+
+    if len(hass.data[DOMAIN]) == 1:
+        hass.data.pop(DOMAIN)
 
     return True
