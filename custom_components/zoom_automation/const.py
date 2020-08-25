@@ -1,5 +1,9 @@
 """Constants for the Zoom Automation integration."""
-from homeassistant.const import CONF_ALIAS, CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    CONF_ALIAS,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+)
 import voluptuous as vol
 
 DOMAIN = "zoom_automation"

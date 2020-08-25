@@ -3,9 +3,16 @@ from logging import getLogger
 from typing import Dict, List
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_ALIAS, CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    CONF_ALIAS,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 import voluptuous as vol
@@ -17,16 +24,26 @@ from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN, ZOOM_SCHEMA
 _LOGGER = getLogger(__name__)
 
 
-def validate_unique_names(config: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def validate_unique_names(
+    config: List[Dict[str, str]]
+) -> List[Dict[str, str]]:
     """Validate CONF_ALIAS is unique for every entry."""
-    slug_names = [slugify(zoom_config[CONF_ALIAS]) for zoom_config in config]
+    slug_names = [
+        slugify(zoom_config[CONF_ALIAS]) for zoom_config in config
+    ]
     if len(set(slug_names)) != len(slug_names):
-        raise vol.Invalid(f"'{CONF_ALIAS}' must be unique for every entry.")
+        raise vol.Invalid(
+            f"'{CONF_ALIAS}' must be unique for every entry."
+        )
     return config
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [vol.All(ZOOM_SCHEMA)], validate_unique_names)},
+    {
+        DOMAIN: vol.All(
+            cv.ensure_list, [vol.All(ZOOM_SCHEMA)], validate_unique_names
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -77,9 +94,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass, implementation
         )
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    session = config_entry_oauth2_flow.OAuth2Session(
+        hass, entry, implementation
+    )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api.AsyncConfigEntryAuth(session)
+    hass.data.setdefault(DOMAIN, {})[
+        entry.entry_id
+    ] = api.AsyncConfigEntryAuth(session)
 
     return True
 
@@ -89,12 +110,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].pop(entry.entry_id)
 
     if not hass.data[DOMAIN].get(SOURCE_IMPORT, False):
-        hass.data[config_entry_oauth2_flow.DATA_IMPLEMENTATIONS][DOMAIN].pop(
-            entry.data["auth_implementation"]
-        )
+        hass.data[config_entry_oauth2_flow.DATA_IMPLEMENTATIONS][
+            DOMAIN
+        ].pop(entry.data["auth_implementation"])
 
-        if not hass.data[config_entry_oauth2_flow.DATA_IMPLEMENTATIONS][DOMAIN]:
-            hass.data[config_entry_oauth2_flow.DATA_IMPLEMENTATIONS].pop(DOMAIN)
+        if not hass.data[config_entry_oauth2_flow.DATA_IMPLEMENTATIONS][
+            DOMAIN
+        ]:
+            hass.data[config_entry_oauth2_flow.DATA_IMPLEMENTATIONS].pop(
+                DOMAIN
+            )
 
     if len(hass.data[DOMAIN]) == 1:
         hass.data.pop(DOMAIN)

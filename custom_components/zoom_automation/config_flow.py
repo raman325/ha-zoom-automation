@@ -3,7 +3,11 @@ import logging
 from typing import Dict
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ALIAS, CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    CONF_ALIAS,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
 import voluptuous as vol
@@ -40,12 +44,16 @@ class OAuth2FlowHandler(
         implementation = None
         self.hass.data.setdefault(DOMAIN, {})
         if user_input is None:
-            if not self.hass.data[DOMAIN].get(config_entries.SOURCE_IMPORT, False):
+            if not self.hass.data[DOMAIN].get(
+                config_entries.SOURCE_IMPORT, False
+            ):
                 implementations = await config_entry_oauth2_flow.async_get_implementations(
                     self.hass, self.DOMAIN
                 )
                 if not implementations:
-                    return self.async_show_form(step_id="user", data_schema=ZOOM_SCHEMA)
+                    return self.async_show_form(
+                        step_id="user", data_schema=ZOOM_SCHEMA
+                    )
 
                 return await self._async_user_choose_implementation_form(
                     implementations
@@ -56,7 +64,9 @@ class OAuth2FlowHandler(
         errors = {}
 
         name = (
-            user_input.get(CONF_ALIAS) if user_input.get(CONF_ALIAS) else DEFAULT_ALIAS
+            user_input.get(CONF_ALIAS)
+            if user_input.get(CONF_ALIAS)
+            else DEFAULT_ALIAS
         )
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -83,13 +93,17 @@ class OAuth2FlowHandler(
             user_input={"implementation": implementation.domain}
         )
 
-    async def async_step_user_choose_implementation(self, user_input) -> dict:
+    async def async_step_user_choose_implementation(
+        self, user_input
+    ) -> dict:
         """Have user choose an implementation."""
         if not user_input:
             self._async_user_choose_implementation_form()
 
         if user_input["implementation"] == CREATE_NEW:
-            return self.async_show_form(step_id="user", data_schema=ZOOM_SCHEMA)
+            return self.async_show_form(
+                step_id="user", data_schema=ZOOM_SCHEMA
+            )
 
         return self.async_step_pick_implementation(user_input)
 
@@ -109,7 +123,8 @@ class OAuth2FlowHandler(
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "implementation", default=list(implementations.keys())[0]
+                        "implementation",
+                        default=list(implementations.keys())[0],
                     ): vol.In(choices)
                 }
             ),
@@ -124,4 +139,6 @@ class OAuth2FlowHandler(
                 CONF_CLIENT_SECRET: self.flow_impl.client_secret,
             }
         )
-        return self.async_create_entry(title=self.flow_impl.name, data=data)
+        return self.async_create_entry(
+            title=self.flow_impl.name, data=data
+        )
