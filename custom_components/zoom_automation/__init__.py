@@ -58,7 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             OAUTH2_AUTHORIZE,
             OAUTH2_TOKEN,
         )
-        OAuth2FlowHandler.async_register_implementation(hass, implementation)
+        OAuth2FlowHandler.async_register_implementation(
+            hass, implementation
+        )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ZoomAPI(
         config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)

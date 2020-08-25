@@ -24,7 +24,9 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
     api = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities([ZoomProfileSensor(name, api)], update_before_add=True)
+    async_add_entities(
+        [ZoomProfileSensor(name, api)], update_before_add=True
+    )
 
 
 class ZoomProfileSensor(Entity):
