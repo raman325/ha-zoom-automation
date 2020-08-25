@@ -51,6 +51,18 @@ Your Home Assistant instance must be externally accessible from the Internet.
 
 ### Configure HomeAssistant
 
+#### Using the UI
+
+1. Click Install
+2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
+3. You will be asked to provide the `Client ID` and `Client Secret` that Zoom gave you earlier. Enter them in and click `Submit`.
+4. Enter a name for the account you plan to connect to Zoom. This will be useful if you plan to monitor more than one Zoom account.
+5. If you are not already logged into Zoom, you will be asked to log in.
+6. Authorize the app for the `Scopes` that were configured earlier.
+7. Start automating!
+
+#### Using configuration.yaml
+
 1. Click Install
 2. Create a new top level configuration item in `configuration.yaml` as follows (you may need to restart your HA instance to pick up the changes once they are added):
 ```yaml
@@ -59,49 +71,28 @@ zoom_automation:
     client_secret: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
 ```
 3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
-4. You will be asked to provide the `Client ID` and `Client Secret` from earlier. Enter them in and click `Submit`.
+4. Enter a name for the account you plan to connect to Zoom. This will be useful if you plan to monitor more than one Zoom account.
 5. If you are not already logged into Zoom, you will be asked to log in.
 6. Authorize the app for the `Scopes` that were configured earlier.
 7. Start automating!
-
 
 > NOTE: Once your app is configured and activated, you can go back to Zoom at any time to update the events you are subscribed to. To do this, go to your [Created Apps list](https://marketplace.zoom.us/user/build) and click on the app name. Go to the `Feature` section and expand `Event Subscriptions`. You can either edit your existing subscription and update it, which will send all of the different events through the same webhook, or create a new subscription and route it to a different webhook, your choice! Once you are done, you should check the `Scopes` section to make sure the permissions make sense for the events you selected. In my testing Zoom does a good job of updating this based on the scopes you select. Once you are done with that, you should remove the integration from the Integrations menu in the HA UI and re-add it. You may need to reauthorize the application if the scopes required have changed.
 
 ## Monitoring more than one Zoom account
 
-In some cases, you may want to receive events for more than one Zoom account. There are two ways to achieve this:
+In some cases, you may want to receive events for more than one Zoom account.
 
-### Option 1 (More work up front but easier to manage later)
+You can add the Zoom integration as many times as you would like with a single `client_id`/`client_secret` configured by going back to the Integrations UI and adding `Zoom Automation` again. As long as you log off Zoom after each time, you will be able to connect your app to each account you want to monitor.
 
-1. Create a Zoom OAuth app for each account you want to monitor. Most of the configuration will be the same, but choose unique app names and unique webhook ID's to use. You will also have a unique `client_id` and `client_secret` for each app.
-2. In your config, create entries for each app as follows: (you can choose any name for each entry, but they **must** be case sensitive unique - internally we use [slugify](https://github.com/un33k/python-slugify) to check uniqueness between records)
-```yaml
-zoom_automation:
-  - name: account1
-    client_id: <CLIENT_ID_1>
-    client_secret: <CLIENT_SECRET_1>
-  - name: account2
-    client_id: <CLIENT_ID_2>
-    client_secret: <CLIENT_SECRET_2>
-```
-3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
-4. A menu will come up asking to pick an implementation along with a list of the names listed in your config. Pick one, and use it to log in to account 1.
-5. Go back to [Zoom](https://zoom.us) and sign out.
-5. Repeat steps 3 and 4 for every entry, picking a different name each time and logging into each different account.
-6. When creating automations, note which webhook ID's you used for each `client_id`/`client_secret` pair. That webhook will receive the notifications for the account you linked to it.
+Events from all of the linked accounts will all be sent to the same `webhook_id`, so in order to create sensible automations, you will need to be able to distinguish between accounts. The integration will add a new sensor for each account that gets linked called `sensor.zoom_{LOWERCASE_NAME_WITH_UNDERSCORES_INSTEAD_OF_SPACES}_user_profile` which contains profile information about the account. You can use the `id`, `email`, or `account_id` attributes of the sensor to identify events coming from the account. The information you need from the webhook event to match to the correct account will be in different places depending on the event type. In addition, you should lowercase both the data from the event and the sensor data to ensure a match.
 
-### Option 2 (Less work up front but a bit more painful to manage later)
-
-You can add the Zoom integration with a single `client_id`/`client_secret` configured as many times as you would like. As long as you log off Zoom after each time, you will be able to connect your app to each account you want to monitor.
-
-The reason this is painful though is because events from all of the linked accounts will all be sent to the same `webhook_id`. Every event that gets sent from Zoom has an `account_id` identifier which can be used o distinguish between accounts by adding a condition as follows:
+### Example
+For the `user.presence_status_updated` event, a `user_id` is provided by `trigger.json.payload.object.id`. I can match that to the id of the entry for `Hello Worlds` as follows :
 ```yaml
 condition:
   condition: template
-  value_template: '{{ trigger.json.payload.account_id == "<UID>" }}'
+  value_template: '{{ trigger.json.payload.object.id.lower() == state_attr('sensor.zoom_hello_world_user_profile', 'id').lower() }}'
 ```
-
-I haven't been able to figure out how to get the UID without monitoring the webhook and logging the data that gets sent, which adds a lot of steps, so I prefer Option 1 over Option 2.
 
 ## Creating Automations
 
