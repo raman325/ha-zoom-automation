@@ -2,8 +2,26 @@
   "title": "Zoom Automation",
   "config": {
     "step": {
+      "user": {
+        "title": "Connect to a new Zoom app",
+        "data": {
+          "alias": "Alias for app",
+          "client_id": "Client ID (obtained from Zoom app)",
+          "client_secret": "Client Secret (obtained from Zoom app)"
+        }
+      },
+      "user_choose_implementation": {
+        "title": "Pick Existing App to Authenticate With",
+        "description": "To define a new app, select (Create New App)",
+        "data": {
+          "implementation": "App"
+        }
+      },
       "pick_implementation": {
-        "title": "Pick Authentication Method"
+        "title": "Pick App to Authenticate With",
+        "data": {
+          "implementation": "App"
+        }
       }
     },
     "error": {

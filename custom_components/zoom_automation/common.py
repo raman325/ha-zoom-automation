@@ -5,9 +5,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.util import slugify
 
 
-class ZoomOAuth2Implementation(
-    config_entry_oauth2_flow.LocalOAuth2Implementation
-):
+class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """Oauth2 implementation that only uses the external url."""
 
     def __init__(
@@ -23,12 +21,7 @@ class ZoomOAuth2Implementation(
         """Initialize local auth implementation."""
         self._name = name
         super().__init__(
-            hass,
-            domain,
-            client_id,
-            client_secret,
-            authorize_url,
-            token_url,
+            hass, domain, client_id, client_secret, authorize_url, token_url
         )
 
     @property
