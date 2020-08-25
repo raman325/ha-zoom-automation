@@ -105,12 +105,13 @@ class OAuth2FlowHandler(
                 step_id="user", data_schema=ZOOM_SCHEMA
             )
 
-        return self.async_step_pick_implementation(user_input)
+        return await self.async_step_pick_implementation(user_input)
 
     async def _async_user_choose_implementation_form(
-        self, implementations: Dict[str, ZoomOAuth2Implementation] = None
+        self, implementations=None
     ) -> dict:
         """Get implementations and add `create new` option to show form."""
+        assert self.hass
         if not implementations:
             implementations = await config_entry_oauth2_flow.async_get_implementations(
                 self.hass, self.DOMAIN
