@@ -48,6 +48,8 @@ Your Home Assistant instance must be externally accessible from the Internet.
 
 ## Installation
 
+<details><summary>Sensors Provided</summary>
+
 You will get two sensors out of the box:
 
 | sensor type 	| sensor name 	| purpose 	| notes 	|
@@ -55,7 +57,9 @@ You will get two sensors out of the box:
 | binary_sensor 	| binary_sensor.zoom_{PROVIDED_ACCOUNT_NAME} 	| Tracks user presence on a Zoom call by consuming the `User's presence status has been updated` event. If ON, the user is on a Zoom call. 	| If `User's presence status has been updated` is not enabled in the Zoom App's Event Subscriptions, this sensor will not work and can be disabled. 	|
 | sensor 	| sensor.zoom_{PROVIDED_ACCOUNT_NAME}_user_profile 	| Gives user details about the account, including `id`, `email`, and `account_id` 	| The primary purpose of this sensor is to make it easier to create custom automations when tracking multiple Zoom accounts as you will need to add conditions on user profile data to determine which account the event is for. If you are only using a single account, or if you have already recorded this information, you can disable this sensor. 	|
 
-<details><summary>Expand</summary>
+</details>
+
+<details><summary>Installation Instructions</summary>
 
 ### Set up your Zoom app
 
