@@ -1,3 +1,9 @@
+{% if installed %}
+
+**BREAKING CHANGE: If you have previously created webhook automations, you will need to update them to be event automations using the `zoom_automation_webhook` event. The latest update will not work properly without this change.**
+
+{% endif %}
+
 [![Last Commit][last-commit-shield]][commits]
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
@@ -10,19 +16,36 @@
 
 _Component to help create automations for events that occur in your [Zoom][zoom] account._
 
+{% if installed %}
+
+## Uninstall
+
+If you choose to uninstall this integration, be sure to go to [the installed apps list](https://marketplace.zoom.us/user/installed) in your Zoom account and uninstall the app from there, otherwise it will continue to send events to your HA instance.
+
+{% endif %}
+
+## Background
+
 Zoom allows users to create custom applications that can trigger a JSON POST to a webhook when certain events in your Zoom account occur. This component will enable you to activate a custom Zoom app for your account which you can then use to subscribe to Zoom events.
 
-_Example: I am currently using this integration to subscribe to the `User's presence status has been updated` event which occurs every time I enter or exit a meeting. A webhook automation gets triggered on each status change and enables/disables a `do not disturb` signal for my wife._
+_Example: I am currently using this integration to subscribe to the `User's presence status has been updated` event which occurs every time I enter or exit a meeting. An event automation gets triggered on each status change and enables/disables a `do not disturb` signal for my wife._
 
 Because the event name is included in the JSON payload sent to the webhook, you can subscribe to any events you would like within the same app and use automation `conditions` to conditionally do different things depending on the event.
-
-{% if not installed %}
 
 ## Pre-Requisites
 
 Your Home Assistant instance must be externally accessible from the Internet.
 
 ## Installation
+
+You will get two sensors out of the box:
+
+| sensor type 	| sensor name 	| purpose 	| notes 	|
+|-	|-	|-	|-	|
+| binary_sensor 	| binary_sensor.zoom_{PROVIDED_ACCOUNT_NAME} 	| Tracks user presence on a Zoom call by consuming the `User's presence status has been updated` event. If ON, the user is on a Zoom call. 	| If `User's presence status has been updated` is not enabled in the Zoom App's Event Subscriptions, this sensor will not work and can be disabled. 	|
+| sensor 	| sensor.zoom_{PROVIDED_ACCOUNT_NAME}_user_profile 	| Gives user details about the account, including `id`, `email`, and `account_id` 	| The primary purpose of this sensor is to make it easier to create custom automations when tracking multiple Zoom accounts as you will need to add conditions on user profile data to determine which account the event is for. If you are only using a single account, or if you have already recorded this information, you can disable this sensor. 	|
+
+<details><summary>Expand</summary>
 
 ### Set up your Zoom app
 
@@ -36,12 +59,23 @@ Your Home Assistant instance must be externally accessible from the Internet.
 8. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
 9. Enter a name for this subscription (does not matter).
 10. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/webhook/<WEBHOOK_ID>`. Use any ID that you already aren't using in your Home Assistant instance. I generated mine using a [GUID Generator](https://www.guidgenerator.com/). Remember this ID for later.
-11. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. For my example from earlier, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`. If you want to get more details about when you start a meeting, add `Start Meeting` under `Meeting`.
+11. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. To use the `binary_sensor` provided by the integration, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`. If you want to get more details about when you start a meeting, add `Start Meeting` under `Meeting`.
 12. Once you are done, click `Done`, then `Save` the subscription before hitting `Continue`.
 13. The `Scopes` section should already be updated to the permissions the app would need for the events you selected earlier. Click `Continue`.
 14. You are now ready to configure Home Assistant!
 
 ### Configure HomeAssistant
+
+You can either do the initial setup through the UI or in your `configuration.yaml` file. Both methods are described below.
+
+#### Using the UI
+
+1. Click Install
+2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
+3. You will be asked to provide the `Client ID` and `Client Secret` that Zoom gave you earlier as well as the `Webhook ID` as you configured it in the earlier section. Enter them in and click Submit.
+4. Skip to "Finish Setup" section below
+
+#### Using configuration.yaml
 
 1. Click Install
 2. Create a new top level configuration item in `configuration.yaml` as follows (you may need to restart your HA instance to pick up the changes once they are added):
@@ -49,16 +83,39 @@ Your Home Assistant instance must be externally accessible from the Internet.
 zoom_automation:
     client_id: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
     client_secret: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
+    webhook_id: <WEBHOOK_ID_FROM_THE_EVENT_SUBSCRIPTIONS_PAGE_OF_SETTING_UP_YOUR_CUSTOM_ZOOM_APP>
 ```
 3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
-4. You will be asked to provide the `Client ID` and `Client Secret` from earlier. Enter them in and click `Submit`.
-5. If you are not already logged into Zoom, you will be asked to log in.
-6. Authorize the app for the `Scopes` that were configured earlier.
-7. Start automating!
+4. Skip to "Finish Setup" section below
 
-{% endif %}
+### Finish setup
 
-> NOTE: Once your app is configured and activated, you can go back to Zoom at any time to update the events you are subscribed to. To do this, go to your [Created Apps list](https://marketplace.zoom.us/user/build) and click on the app name. Go to the `Feature` section and expand `Event Subscriptions`. You can either edit your existing subscription and update it, which will send all of the different events through the same webhook, or create a new subscription and route it to a different webhook, your choice! Once you are done, you should check the `Scopes` section to make sure the permissions make sense for the events you selected. In my testing Zoom does a good job of updating this based on the scopes you select. Once you are done with that, you should remove the integration from the Integrations menu in the HA UI and re-add it. You may need to reauthorize the application if the scopes required have changed.
+5. Enter a name for the account you plan to connect to Zoom. This will be useful if you plan to monitor more than one Zoom account.
+6. If you are not already logged into Zoom, you will be asked to log in.
+7. Authorize the app for the `Scopes` that were configured earlier.
+8. Start automating!
+
+> NOTE: Once your app is configured and activated, you can go back to Zoom at any time to update the events you are subscribed to. To do this, go to your [Created Apps list](https://marketplace.zoom.us/user/build) and click on the app name. Go to the `Feature` section and expand `Event Subscriptions`, then edit your existing subscription and update it. Once you are done, you should check the `Scopes` section to make sure the permissions make sense for the events you selected. In my testing Zoom does a good job of updating this based on the scopes you select. Once you are done with that, you should remove the integration from the Integrations menu in the HA UI and re-add it. You may need to reauthorize the application if the scopes required have changed.
+
+</details>
+
+## Monitoring more than one Zoom account
+
+In some cases, you may want to receive events for more than one Zoom account.
+
+You can add the Zoom integration as many times as you would like with a single `client_id`/`client_secret` configured by going back to the Integrations UI and adding `Zoom Automation` again. As long as you log off Zoom after each time, you will be able to connect your app to each account you want to monitor.
+
+### For users who used the Advanced Installation method
+
+Events from all of the linked accounts will all be sent to the same `webhook_id`, so in order to create sensible automations, you will need to be able to distinguish between accounts. The integration will add a new sensor for each account that gets linked called `sensor.zoom_{LOWERCASE_NAME_WITH_UNDERSCORES_INSTEAD_OF_SPACES}_user_profile` which contains profile information about the account. You can use the `id`, `email`, or `account_id` attributes of the sensor to identify events coming from the account. The information you need from the webhook event to match to the correct account will be in different places depending on the event type. In addition, you should lowercase both the property from the event and the sensor data to ensure a match. In testing I found that Zoom sends a lowercase `id`, so it just seems like the safer approach.
+
+### Example
+For the `user.presence_status_updated` event, a `user_id` is provided by `trigger.json.payload.object.id`. I can match that to the id of the entry for `Hello Worlds` as follows :
+```yaml
+condition:
+  condition: template
+  value_template: '{{ trigger.json.payload.object.id.lower() == state_attr('sensor.zoom_hello_world_user_profile', 'id').lower() }}'
+```
 
 ## Creating Automations
 
@@ -69,16 +126,18 @@ You are free to create automations however you see fit, but here are some tips:
 Your trigger configuration should be as follows:
 ```yaml
 trigger:
-    platform: webhook
-    webhook_id: <THE_WEBHOOK_ID_YOU_SET_UP_IN_YOUR_CUSTOM_ZOOM_APP>
+    platform: event
+    event_type: zoom_automation_webhook
+    event_data:
+        event: <ZOOM_EVENT_NAME>
 ```
 
 ### Conditions and Actions
 
-To see the schema of various events, check Zoom's [Webhook Reference docs](https://marketplace.zoom.us/docs/api-reference/webhook-reference). On the left hand side navigation, you can click into the various Event types and see the format of the JSON that will be sent to your webhook.
+To see the schema of various events, check Zoom's [Webhook Reference docs](https://marketplace.zoom.us/docs/api-reference/webhook-reference). On the left hand side navigation, you can click into the various Event types and see the format of the JSON that will be sent to HA.
 
 To create a condition on an event type, use something like the following:
-```
+```yaml
 condition:
   condition: template
   value_template: '{{ trigger.json.event == "user.presence_status_updated" }}'
@@ -94,8 +153,8 @@ You can use some `input_text`s with an automation too, like this:
 - alias: Zoom status updates
   description: ''
   trigger:
-  - platform: webhook
-    webhook_id: b44915ce-7a7a-43c8-953a-23c35d790097
+  - platform: event
+    event_type: zoom_automation_webhook
   condition: []
   action:
   - choose:
@@ -127,7 +186,7 @@ You can use some `input_text`s with an automation too, like this:
 [zoom]: https://zoom.us/
 [commits-shield]: https://img.shields.io/github/commit-activity/y/raman325/ha-zoom-automation.svg?style=for-the-badge
 [commits]: https://github.com/raman325/ha-zoom-automation/commits/master
-[hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
+[hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
 [discord]: https://discord.gg/Qa5fW2R
 [discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
 [exampleimg]: example.png
