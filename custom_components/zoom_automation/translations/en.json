@@ -6,7 +6,8 @@
         "title": "Connect to a new Zoom app",
         "data": {
           "client_id": "Client ID (obtained from Zoom app)",
-          "client_secret": "Client Secret (obtained from Zoom app)"
+          "client_secret": "Client Secret (obtained from Zoom app)",
+          "webhook_id": "Webhook ID (configured in the Event Subscriptions section of creating your Zoom app)"
         }
       },
       "choose_name": {

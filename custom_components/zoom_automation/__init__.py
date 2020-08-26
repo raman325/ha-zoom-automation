@@ -1,8 +1,16 @@
 """The Zoom Automation integration."""
+import json
 from logging import getLogger
 
+from aiohttp.web import Request
+from homeassistant.components.webhook import async_register, async_unregister
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_NAME,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.typing import ConfigType
@@ -11,12 +19,18 @@ import voluptuous as vol
 from .api import ZoomAPI
 from .common import ZoomOAuth2Implementation
 from .config_flow import OAuth2FlowHandler
-from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN, ZOOM_SCHEMA
+from .const import (
+    DOMAIN,
+    HA_OCCUPANCY_EVENT,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+    WEBHOOK_RESPONSE_SCHEMA,
+    ZOOM_SCHEMA,
+)
 
 _LOGGER = getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: ZOOM_SCHEMA}, extra=vol.ALLOW_EXTRA,)
-PLATFORMS = ["sensor"]
+CONFIG_SCHEMA = vol.Schema({DOMAIN: ZOOM_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):
@@ -35,11 +49,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
             config[DOMAIN][CONF_CLIENT_SECRET],
             OAUTH2_AUTHORIZE,
             OAUTH2_TOKEN,
+            config[DOMAIN].get(CONF_WEBHOOK_ID),
         ),
     )
     hass.data[DOMAIN][SOURCE_IMPORT] = True
 
     return True
+
+
+async def handle_webhook(hass: HomeAssistant, webhook_id: str, request: Request):
+    """Handle incoming webhook from Zoom."""
+    try:
+        data = dict(await request.json())
+        status = WEBHOOK_RESPONSE_SCHEMA(data)
+    except:
+        _LOGGER.warning("Received unknown webhook event: %s", json.dumps(data))
+        return
+
+    hass.bus.async_fire(HA_OCCUPANCY_EVENT, status)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -57,18 +84,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             entry.data[CONF_CLIENT_SECRET],
             OAUTH2_AUTHORIZE,
             OAUTH2_TOKEN,
+            entry.data[CONF_WEBHOOK_ID],
         )
-        OAuth2FlowHandler.async_register_implementation(
-            hass, implementation
-        )
+        OAuth2FlowHandler.async_register_implementation(hass, implementation)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ZoomAPI(
         config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     )
 
-    for platform in PLATFORMS:
+    if entry.data[CONF_WEBHOOK_ID]:
+        # Register callback just once for when Zoom event is received.
+        if entry.data[CONF_WEBHOOK_ID] not in hass.data[DOMAIN]:
+            async_register(
+                hass,
+                DOMAIN,
+                entry.data[CONF_NAME],
+                entry.data[CONF_WEBHOOK_ID],
+                handle_webhook,
+            )
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
+            hass.config_entries.async_forward_entry_setup(entry, "binary_sensor")
+        )
+    else:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, "sensor")
         )
 
     return True
@@ -77,5 +116,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     hass.data[DOMAIN].pop(entry.entry_id)
+
+    if entry.data[CONF_WEBHOOK_ID] and len(hass.data[DOMAIN]) == 1:
+        async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     return True
