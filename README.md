@@ -28,7 +28,7 @@ If you choose to uninstall this integration, be sure to go to [the installed app
 
 Zoom allows users to create custom applications that can trigger a JSON POST to a webhook when certain events in your Zoom account occur. This component will enable you to activate a custom Zoom app for your account which you can then use to subscribe to Zoom events.
 
-_Example: I am currently using this integration to subscribe to the `User's presence status has been updated` event which occurs every time I enter or exit a meeting. A webhook automation gets triggered on each status change and enables/disables a `do not disturb` signal for my wife._
+_Example: I am currently using this integration to subscribe to the `User's presence status has been updated` event which occurs every time I enter or exit a meeting. An event automation gets triggered on each status change and enables/disables a `do not disturb` signal for my wife._
 
 Because the event name is included in the JSON payload sent to the webhook, you can subscribe to any events you would like within the same app and use automation `conditions` to conditionally do different things depending on the event.
 
@@ -134,7 +134,7 @@ trigger:
 
 ### Conditions and Actions
 
-To see the schema of various events, check Zoom's [Webhook Reference docs](https://marketplace.zoom.us/docs/api-reference/webhook-reference). On the left hand side navigation, you can click into the various Event types and see the format of the JSON that will be sent to your webhook.
+To see the schema of various events, check Zoom's [Webhook Reference docs](https://marketplace.zoom.us/docs/api-reference/webhook-reference). On the left hand side navigation, you can click into the various Event types and see the format of the JSON that will be sent to HA.
 
 To create a condition on an event type, use something like the following:
 ```yaml
