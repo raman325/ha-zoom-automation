@@ -36,9 +36,9 @@ jobs:
       - name: Run formatting
         run: |
           python -m isort -v .
-          python -m black -v --line-length 88 .
+          python -m black -v .
           python -m isort -v .
-          python -m black -v --line-length 88 .
+          python -m black -v .
       - name: Commit files
         run: |
           if [ $(git diff HEAD | wc -l) -gt 30 ]
