@@ -129,7 +129,7 @@ For the `user.presence_status_updated` event, a `user_id` is provided by `trigge
 ```yaml
 condition:
   condition: template
-  value_template: '{{ trigger.json.payload.object.id.lower() == state_attr('sensor.zoom_hello_world_user_profile', 'id').lower() }}'
+  value_template: '{{ trigger.event.data.payload.object.id.lower() == state_attr('sensor.zoom_hello_world_user_profile', 'id').lower() }}'
 ```
 
 ## Creating Automations
@@ -155,7 +155,7 @@ To create a condition on an event type, use something like the following:
 ```yaml
 condition:
   condition: template
-  value_template: '{{ trigger.json.event == "user.presence_status_updated" }}'
+  value_template: '{{ trigger.event.data.event == "user.presence_status_updated" }}'
 ```
 
 You will likely want to act on information in `trigger.json.payload.object`, either in a `condition` or an `action`. Be sure to use `value_template` and `data_template` when accessing this information in your configured automation.
@@ -175,19 +175,19 @@ You can use some `input_text`s with an automation too, like this:
   - choose:
     - conditions:
       - condition: template
-        value_template: '{{ trigger.json.event == "user.presence_status_updated" }}'
+        value_template: '{{ trigger.event.data.event == "user.presence_status_updated" }}'
       sequence:
       - data_template:
           entity_id: input_text.zoom_status
-          value: '{{ trigger.json.payload.object.presence_status }}'
+          value: '{{ trigger.event.data.payload.object.presence_status }}'
         service: input_text.set_value
     - conditions:
       - condition: template
-        value_template: '{{ trigger.json.event == "meeting.started" }}'
+        value_template: '{{ trigger.event.data.event == "meeting.started" }}'
       sequence:
       - data_template:
           entity_id: input_text.zoom_meeting
-          value: '{{ trigger.json.payload.object.topic }}'
+          value: '{{ trigger.event.data.payload.object.topic }}'
         service: input_text.set_value
   mode: single
 ```
