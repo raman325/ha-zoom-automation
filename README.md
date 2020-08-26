@@ -125,7 +125,7 @@ You can add the Zoom integration as many times as you would like with a single `
 Events from all of the linked accounts will all be sent to the same `webhook_id`, so in order to create sensible automations, you will need to be able to distinguish between accounts. The integration will add a new sensor for each account that gets linked called `sensor.zoom_{LOWERCASE_NAME_WITH_UNDERSCORES_INSTEAD_OF_SPACES}_user_profile` which contains profile information about the account. You can use the `id`, `email`, or `account_id` attributes of the sensor to identify events coming from the account. The information you need from the webhook event to match to the correct account will be in different places depending on the event type. In addition, you should lowercase both the property from the event and the sensor data to ensure a match. In testing I found that Zoom sends a lowercase `id`, so it just seems like the safer approach.
 
 ### Example
-For the `user.presence_status_updated` event, a `user_id` is provided by `trigger.json.payload.object.id`. I can match that to the id of the entry for `Hello Worlds` as follows :
+For the `user.presence_status_updated` event, a `user_id` is provided by `trigger.event.data.payload.object.id`. I can match that to the id of the entry for `Hello Worlds` as follows :
 ```yaml
 condition:
   condition: template
@@ -158,7 +158,7 @@ condition:
   value_template: '{{ trigger.event.data.event == "user.presence_status_updated" }}'
 ```
 
-You will likely want to act on information in `trigger.json.payload.object`, either in a `condition` or an `action`. Be sure to use `value_template` and `data_template` when accessing this information in your configured automation.
+You will likely want to act on information in `trigger.event.data.payload.object`, either in a `condition` or an `action`. Be sure to use `value_template` and `data_template` when accessing this information in your configured automation.
 
 You can use some `input_text`s with an automation too, like this:
 
