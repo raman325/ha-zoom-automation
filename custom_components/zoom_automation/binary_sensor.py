@@ -2,9 +2,7 @@
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-)
+from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Event
@@ -35,9 +33,7 @@ async def async_setup_entry(
     )
 
 
-def get_data_from_path(
-    data: Dict[str, Any], path: List[str]
-) -> Optional[str]:
+def get_data_from_path(data: Dict[str, Any], path: List[str]) -> Optional[str]:
     """Get value from dictionary using path list."""
     for val in path:
         data = data.get(val, {})
@@ -50,9 +46,7 @@ def get_data_from_path(
 class ZoomConnectivitySensor(ZoomBaseEntity):
     """Class for a Zoom Automation user profile sensor."""
 
-    def __init__(
-        self, hass: HomeAssistantType, config_entry: ConfigEntry
-    ) -> None:
+    def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
         """Initialize base sensor."""
         super().__init__(hass, config_entry)
         self._state: str = STATE_OFF
@@ -69,9 +63,7 @@ class ZoomConnectivitySensor(ZoomBaseEntity):
         ):
             self._state = (
                 STATE_OFF
-                if get_data_from_path(
-                    event.data, CONNECTIVITY_STATUS
-                ).lower()
+                if get_data_from_path(event.data, CONNECTIVITY_STATUS).lower()
                 == CONNECTIVITY_STATUS_OFF.lower()
                 else STATE_ON
             )
@@ -82,9 +74,7 @@ class ZoomConnectivitySensor(ZoomBaseEntity):
         """Register callbacks when entity is added."""
         # Register callback for webhook event
         self._async_unsub_listeners.append(
-            self.hass.bus.async_listen(
-                HA_CONNECTIVITY_EVENT, self.async_update_status
-            )
+            self.hass.bus.async_listen(HA_CONNECTIVITY_EVENT, self.async_update_status)
         )
 
     async def async_will_remove_from_hass(self) -> None:
