@@ -14,6 +14,12 @@
 [![Discord][discord-shield]][discord]
 [![Community Forum][forum-shield]][forum]
 
+{% if installed %}
+
+**BREAKING CHANGE: If you have previously created webhook automations, you will need to update them to be event automations using the `zoom_automation_webhook` event. The latest update will not work properly without this change.**
+
+{% endif %}
+
 _Component to help create automations for events that occur in your [Zoom][zoom] account._
 
 {% if installed %}
