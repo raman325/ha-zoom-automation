@@ -11,9 +11,7 @@ SCAN_INTERVAL = timedelta(hours=1)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
-    config_entry: ConfigEntry,
-    async_add_entities,
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities,
 ) -> None:
     """Set up a Zoom Automation profile sensor entry."""
     async_add_entities([ZoomProfileSensor(hass, config_entry)], update_before_add=True)
