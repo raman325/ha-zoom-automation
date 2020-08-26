@@ -1,5 +1,5 @@
 {% if installed %}
-
+**BREAKING CHANGE: If you have previously setup this automation, the options required in your configuration have changed. Remove the existing configuration and update your configuration as defined in step 2 of the Installation>Configuring HomeAssistant section below. Note that the `Event notification endpoint URL` in step 11 of the `Installation>Set up your Zoom app` section has changed as well and will need to be updated.**
 **BREAKING CHANGE: If you have previously created webhook automations, you will need to update them to be event automations using the `zoom_automation_webhook` event. The latest update will not work properly without this change.**
 
 {% endif %}
@@ -16,6 +16,7 @@
 
 {% if installed %}
 
+**BREAKING CHANGE: If you have previously setup this automation, the options required in your configuration have changed. Remove the existing configuration and update your configuration as defined in step 2 of the Installation>Configuring HomeAssistant section below. Note that the `Event notification endpoint URL` in step 10 of the `Installation>Set up your Zoom app` has changed as well and will need to be updated.**
 **BREAKING CHANGE: If you have previously created webhook automations, you will need to update them to be event automations using the `zoom_automation_webhook` event. The latest update will not work properly without this change.**
 
 {% endif %}
@@ -62,13 +63,14 @@ You will get two sensors out of the box:
 5. Enter the following `Redirect URL for OAuth`: `<BASE_HA_URL>/auth/external/callback` (replace `<BASE_HA_URL>` with the URL you use to access Home Assistant, e.g. `https://ha.example.com`)
 6. Enter your `<BASE_HA_URL>` in the `Whitelist URL` section, then hit `Continue`.
 7. The `App Name` should already be filled out. A `Short Description` and `Long Description` are required, but since this app is only for you, it doesn't matter what you enter here. Click `Continue` once you are done.
-8. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
-9. Enter a name for this subscription (does not matter).
-10. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/webhook/<WEBHOOK_ID>`. Use any ID that you already aren't using in your Home Assistant instance. I generated mine using a [GUID Generator](https://www.guidgenerator.com/). Remember this ID for later.
-11. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. To use the `binary_sensor` provided by the integration, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`. If you want to get more details about when you start a meeting, add `Start Meeting` under `Meeting`.
-12. Once you are done, click `Done`, then `Save` the subscription before hitting `Continue`.
-13. The `Scopes` section should already be updated to the permissions the app would need for the events you selected earlier. Click `Continue`.
-14. You are now ready to configure Home Assistant!
+8. Make note of the `Verification Token` on the `Feature` page as you will need it for your configuration later.
+9. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
+10. Enter a name for this subscription (does not matter).
+11. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/zoom_automation`.
+12. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. To use the `binary_sensor` provided by the integration, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`. If you want to get more details about when you start a meeting, add `Start Meeting` under `Meeting`.
+13. Once you are done, click `Done`, then `Save` the subscription before hitting `Continue`.
+14. The `Scopes` section should already be updated to the permissions the app would need for the events you selected earlier. Click `Continue`.
+15. You are now ready to configure Home Assistant!
 
 ### Configure HomeAssistant
 
@@ -89,7 +91,7 @@ You can either do the initial setup through the UI or in your `configuration.yam
 zoom_automation:
     client_id: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
     client_secret: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
-    webhook_id: <WEBHOOK_ID_FROM_THE_EVENT_SUBSCRIPTIONS_PAGE_OF_SETTING_UP_YOUR_CUSTOM_ZOOM_APP>
+    verification_token: <VERIFICATION_TOKEN_FROM_THE_FEATURE_PAGE_OF_YOUR_CUSTOM_ZOOM_APP>
 ```
 3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
 4. Skip to "Finish Setup" section below
