@@ -87,7 +87,7 @@ You can either do the initial setup through the UI or in your `configuration.yam
 
 1. Click Install
 2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
-3. You will be asked to provide the `Client ID` and `Client Secret` that Zoom gave you earlier as well as the `Webhook ID` as you configured it in the earlier section. Enter them in and click Submit.
+3. You will be asked to provide the `Client ID` and `Client Secret` that Zoom gave you earlier as well as the `Verification Token` as you grabbed from Zoom in the earlier section. Enter them in and click Submit.
 4. Skip to "Finish Setup" section below
 
 #### Using configuration.yaml
