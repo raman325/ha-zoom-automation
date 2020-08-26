@@ -27,7 +27,12 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         """Initialize local auth implementation."""
         self._webhook_id = webhook_id
         super().__init__(
-            hass, domain, client_id, client_secret, authorize_url, token_url,
+            hass,
+            domain,
+            client_id,
+            client_secret,
+            authorize_url,
+            token_url,
         )
 
     @property
