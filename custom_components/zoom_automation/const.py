@@ -1,10 +1,14 @@
 """Constants for the Zoom Automation integration."""
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_validation as cv
 import voluptuous as vol
 
 DOMAIN = "zoom_automation"
 DEFAULT_NAME = "Zoom Automation"
+
+HA_URL = f"/api/{DOMAIN}"
+
+CONF_VERIFICATION_TOKEN = "verification_token"
 
 OAUTH2_AUTHORIZE = "https://zoom.us/oauth/authorize"
 OAUTH2_TOKEN = "https://zoom.us/oauth/token"
@@ -16,9 +20,11 @@ ZOOM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CLIENT_ID): vol.Coerce(str),
         vol.Required(CONF_CLIENT_SECRET): vol.Coerce(str),
-        vol.Required(CONF_WEBHOOK_ID): vol.Coerce(str),
+        vol.Required(CONF_VERIFICATION_TOKEN): vol.Coerce(str),
     }
 )
+
+CONF_VERIFICATION_TOKEN = "verification_token"
 
 ATTR_EVENT = "event"
 ATTR_PAYLOAD = "payload"
@@ -26,12 +32,12 @@ ATTR_OBJECT = "object"
 ATTR_ID = "id"
 ATTR_PRESENCE_STATUS = "presence_status"
 
-CONNECTIVITY_EVENT = "user.presence_status_updated"
-CONNECTIVITY_STATUS = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_PRESENCE_STATUS]
-CONNECTIVITY_ID = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_ID]
-CONNECTIVITY_STATUS_OFF = "Available"
+OCCUPANCY_EVENT = "user.presence_status_updated"
+OCCUPANCY_STATUS = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_PRESENCE_STATUS]
+OCCUPANCY_ID = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_ID]
+OCCUPANCY_STATUS_OFF = "Available"
 
-HA_CONNECTIVITY_EVENT = f"{DOMAIN}_webhook"
+HA_ZOOM_EVENT = f"{DOMAIN}_webhook"
 
 WEBHOOK_RESPONSE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_EVENT): cv.string, vol.Required(ATTR_PAYLOAD): dict}
