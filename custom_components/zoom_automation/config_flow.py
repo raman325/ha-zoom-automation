@@ -3,18 +3,20 @@ import logging
 from typing import Any, Dict
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_NAME,
-    CONF_WEBHOOK_ID,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
 import voluptuous as vol
 
 from .common import ZoomOAuth2Implementation
-from .const import DEFAULT_NAME, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN, ZOOM_SCHEMA
+from .const import (
+    CONF_VERIFICATION_TOKEN,
+    DEFAULT_NAME,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+    ZOOM_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +63,7 @@ class OAuth2FlowHandler(
                 user_input[CONF_CLIENT_SECRET],
                 OAUTH2_AUTHORIZE,
                 OAUTH2_TOKEN,
-                user_input[CONF_WEBHOOK_ID],
+                user_input[CONF_VERIFICATION_TOKEN],
             ),
         )
 
@@ -95,7 +97,7 @@ class OAuth2FlowHandler(
                 CONF_NAME: self._name,
                 CONF_CLIENT_ID: self.flow_impl.client_id,
                 CONF_CLIENT_SECRET: self.flow_impl.client_secret,
-                CONF_WEBHOOK_ID: self.flow_impl._webhook_id,
+                CONF_VERIFICATION_TOKEN: self.flow_impl._verification_token,
             }
         )
         return self.async_create_entry(title=self._name, data=data)
