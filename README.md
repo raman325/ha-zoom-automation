@@ -48,6 +48,8 @@ Your Home Assistant instance must be externally accessible from the Internet.
 
 ## Installation
 
+<details><summary>Sensors Provided</summary>
+
 You will get two sensors out of the box:
 
 | sensor type 	| sensor name 	| purpose 	| notes 	|
@@ -55,7 +57,9 @@ You will get two sensors out of the box:
 | binary_sensor 	| binary_sensor.zoom_{PROVIDED_ACCOUNT_NAME} 	| Tracks user presence on a Zoom call by consuming the `User's presence status has been updated` event. If ON, the user is on a Zoom call. 	| If `User's presence status has been updated` is not enabled in the Zoom App's Event Subscriptions, this sensor will not work and can be disabled. 	|
 | sensor 	| sensor.zoom_{PROVIDED_ACCOUNT_NAME}_user_profile 	| Gives user details about the account, including `id`, `email`, and `account_id` 	| The primary purpose of this sensor is to make it easier to create custom automations when tracking multiple Zoom accounts as you will need to add conditions on user profile data to determine which account the event is for. If you are only using a single account, or if you have already recorded this information, you can disable this sensor. 	|
 
-<details><summary>Expand</summary>
+</details>
+
+<details><summary>Installation Instructions</summary>
 
 ### Set up your Zoom app
 
@@ -121,11 +125,11 @@ You can add the Zoom integration as many times as you would like with a single `
 Events from all of the linked accounts will all be sent to the same `webhook_id`, so in order to create sensible automations, you will need to be able to distinguish between accounts. The integration will add a new sensor for each account that gets linked called `sensor.zoom_{LOWERCASE_NAME_WITH_UNDERSCORES_INSTEAD_OF_SPACES}_user_profile` which contains profile information about the account. You can use the `id`, `email`, or `account_id` attributes of the sensor to identify events coming from the account. The information you need from the webhook event to match to the correct account will be in different places depending on the event type. In addition, you should lowercase both the property from the event and the sensor data to ensure a match. In testing I found that Zoom sends a lowercase `id`, so it just seems like the safer approach.
 
 ### Example
-For the `user.presence_status_updated` event, a `user_id` is provided by `trigger.json.payload.object.id`. I can match that to the id of the entry for `Hello Worlds` as follows :
+For the `user.presence_status_updated` event, a `user_id` is provided by `trigger.event.data.payload.object.id`. I can match that to the id of the entry for `Hello Worlds` as follows :
 ```yaml
 condition:
   condition: template
-  value_template: '{{ trigger.json.payload.object.id.lower() == state_attr('sensor.zoom_hello_world_user_profile', 'id').lower() }}'
+  value_template: '{{ trigger.event.data.payload.object.id.lower() == state_attr('sensor.zoom_hello_world_user_profile', 'id').lower() }}'
 ```
 
 ## Creating Automations
@@ -151,10 +155,10 @@ To create a condition on an event type, use something like the following:
 ```yaml
 condition:
   condition: template
-  value_template: '{{ trigger.json.event == "user.presence_status_updated" }}'
+  value_template: '{{ trigger.event.data.event == "user.presence_status_updated" }}'
 ```
 
-You will likely want to act on information in `trigger.json.payload.object`, either in a `condition` or an `action`. Be sure to use `value_template` and `data_template` when accessing this information in your configured automation.
+You will likely want to act on information in `trigger.event.data.payload.object`, either in a `condition` or an `action`. Be sure to use `value_template` and `data_template` when accessing this information in your configured automation.
 
 You can use some `input_text`s with an automation too, like this:
 
@@ -171,19 +175,19 @@ You can use some `input_text`s with an automation too, like this:
   - choose:
     - conditions:
       - condition: template
-        value_template: '{{ trigger.json.event == "user.presence_status_updated" }}'
+        value_template: '{{ trigger.event.data.event == "user.presence_status_updated" }}'
       sequence:
       - data_template:
           entity_id: input_text.zoom_status
-          value: '{{ trigger.json.payload.object.presence_status }}'
+          value: '{{ trigger.event.data.payload.object.presence_status }}'
         service: input_text.set_value
     - conditions:
       - condition: template
-        value_template: '{{ trigger.json.event == "meeting.started" }}'
+        value_template: '{{ trigger.event.data.event == "meeting.started" }}'
       sequence:
       - data_template:
           entity_id: input_text.zoom_meeting
-          value: '{{ trigger.json.payload.object.topic }}'
+          value: '{{ trigger.event.data.payload.object.topic }}'
         service: input_text.set_value
   mode: single
 ```
