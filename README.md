@@ -24,7 +24,7 @@ Zoom allows users to create custom applications that can trigger a JSON POST to 
 
 _Example: I am currently using this integration to subscribe to the `User's presence status has been updated` event which occurs every time I enter or exit a meeting. A webhook automation gets triggered on each status change and enables/disables a `do not disturb` signal for my wife._
 
-Because the event name is included in the JSON payload sent to the webhook, you can subscribe to any events you would like within the same app and use automation `conditions` to conditionally do different things depending on the event. **If you are just interested in setting up this integration to monitor when someone is on or off a Zoom call, skip the Installation section to the "Easy Installation - Binary Sensor that indicates when the user is on a call" section**
+Because the event name is included in the JSON payload sent to the webhook, you can subscribe to any events you would like within the same app and use automation `conditions` to conditionally do different things depending on the event.
 
 ## Pre-Requisites
 
@@ -92,7 +92,7 @@ zoom_automation:
 
 ### Advanced Installation - You set up your own webhook automations but you can monitor any Zoom event
 
-This installation method does very little out of the box but allows you to build your own automations to consume any Zoom event (check out [Webhook Reference docs](https://marketplace.zoom.us/docs/api-reference/webhook-reference) to see what types of events you can consume). Typically these automations would set the state of an `input_text` entity, and then you can build automations using the state of those entities to do something else e.g. turn on a red light or send a Slack message.
+This installation method does very little out of the box but allows you to build your own automations to consume any Zoom event (check out [Zoom's Webhook Reference docs](https://marketplace.zoom.us/docs/api-reference/webhook-reference) to see what types of events you can consume). Typically these automations would set the state of an `input_text` entity, and then you can build automations using the state of those entities to do something else e.g. turn on a red light or send a Slack message.
 
 <details><summary>Expand</summary>
 
