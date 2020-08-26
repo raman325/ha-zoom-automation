@@ -57,14 +57,16 @@ This installation method only supports monitoring the `User's presence status ha
 
 #### Configure HomeAssistant
 
-##### Using the UI
+You can either do the initial setup through the UI or in your `configuration.yaml` file. Both methods are described below.
+
+#### Using the UI
 
 1. Click Install
 2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
 3. You will be asked to provide the `Client ID` and `Client Secret` that Zoom gave you earlier as well as the `Webhook ID` as you configured it in the earlier section. Enter them in and click `Submit`.
 4. Skip to "Finish Setup" section below
 
-##### Using configuration.yaml
+#### Using configuration.yaml
 
 1. Click Install
 2. Create a new top level configuration item in `configuration.yaml` as follows (you may need to restart your HA instance to pick up the changes once they are added):
@@ -77,7 +79,7 @@ zoom_automation:
 3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
 4. Skip to "Finish Setup" section below
 
-##### Finish setup
+#### Finish setup
 
 5. Enter a name for the account you plan to connect to Zoom. This will be useful if you plan to monitor more than one Zoom account.
 6. If you are not already logged into Zoom, you will be asked to log in.
@@ -113,14 +115,16 @@ This installation method does very little out of the box but allows you to build
 
 #### Configure HomeAssistant
 
-##### Using the UI
+You can either do the initial setup through the UI or in your `configuration.yaml` file. Both methods are described below.
+
+#### Using the UI
 
 1. Click Install
 2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
 3. You will be asked to provide the `Client ID` and `Client Secret` that Zoom gave you earlier (do not enter a `Webhook ID`, that is used for the easy install below and will not allow you to build custom webhook automations). Enter them in and click `Submit`.
 4. Skip to "Finish Setup" section below
 
-##### Using configuration.yaml
+#### Using configuration.yaml
 
 1. Click Install
 2. Create a new top level configuration item in `configuration.yaml` as follows (you may need to restart your HA instance to pick up the changes once they are added):
@@ -133,7 +137,7 @@ zoom_automation:
 3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
 4. Skip to "Finish Setup" section below
 
-##### Finish setup
+#### Finish setup
 
 5. Enter a name for the account you plan to connect to Zoom. This will be useful if you plan to monitor more than one Zoom account.
 6. If you are not already logged into Zoom, you will be asked to log in.
