@@ -18,13 +18,17 @@ async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities,
 ) -> None:
     """Set up a Zoom Automation profile sensor entry."""
-    async_add_entities([ZoomProfileSensor(hass, config_entry)], update_before_add=True)
+    async_add_entities(
+        [ZoomProfileSensor(hass, config_entry)], update_before_add=True
+    )
 
 
 class ZoomProfileSensor(Entity):
     """Class for a Zoom Automation user profile sensor."""
 
-    def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistantType, config_entry: ConfigEntry
+    ) -> None:
         """Initialize base sensor."""
         self._api: ZoomAPI = hass.data[DOMAIN][config_entry.entry_id]
         self._name: str = config_entry.data[CONF_NAME]

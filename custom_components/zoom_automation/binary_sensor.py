@@ -4,7 +4,12 @@ from typing import Any, Dict, List, Optional
 
 from homeassistant.components.binary_sensor import DEVICE_CLASS_OCCUPANCY
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_WEBHOOK_ID, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_WEBHOOK_ID,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import Event
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -32,7 +37,9 @@ async def async_setup_entry(
     )
 
 
-def get_data_from_path(data: Dict[str, Any], path: List[str]) -> Optional[str]:
+def get_data_from_path(
+    data: Dict[str, Any], path: List[str]
+) -> Optional[str]:
     """Get value from dictionary using path list."""
     for val in path:
         data = data.get(val, {})
@@ -45,7 +52,9 @@ def get_data_from_path(data: Dict[str, Any], path: List[str]) -> Optional[str]:
 class ZoomOccupancySensor(Entity):
     """Class for a Zoom Automation user profile sensor."""
 
-    def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistantType, config_entry: ConfigEntry
+    ) -> None:
         """Initialize base sensor."""
         self._api: ZoomAPI = hass.data[DOMAIN][config_entry.entry_id]
         self._name: str = config_entry.data[CONF_NAME]
@@ -77,7 +86,9 @@ class ZoomOccupancySensor(Entity):
         """Register callbacks when entity is added."""
         # Register callback for webhook event
         self._async_unsub_listeners.append(
-            self.hass.bus.async_listen(HA_OCCUPANCY_EVENT, self.async_update_status)
+            self.hass.bus.async_listen(
+                HA_OCCUPANCY_EVENT, self.async_update_status
+            )
         )
 
     async def async_will_remove_from_hass(self) -> None:

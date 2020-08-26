@@ -13,7 +13,13 @@ from homeassistant.helpers import config_entry_oauth2_flow
 import voluptuous as vol
 
 from .common import ZoomOAuth2Implementation
-from .const import DEFAULT_NAME, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN, ZOOM_SCHEMA
+from .const import (
+    DEFAULT_NAME,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+    ZOOM_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +50,9 @@ class OAuth2FlowHandler(
 
         if user_input is None:
             return (
-                self.async_show_form(step_id="user", data_schema=ZOOM_SCHEMA)
+                self.async_show_form(
+                    step_id="user", data_schema=ZOOM_SCHEMA
+                )
                 if not await config_entry_oauth2_flow.async_get_implementations(
                     self.hass, self.DOMAIN
                 )
@@ -74,14 +82,20 @@ class OAuth2FlowHandler(
             return self.async_show_form(
                 step_id="choose_name",
                 data_schema=vol.Schema(
-                    {vol.Required(CONF_NAME, default=DEFAULT_NAME): vol.Coerce(str)}
+                    {
+                        vol.Required(
+                            CONF_NAME, default=DEFAULT_NAME
+                        ): vol.Coerce(str)
+                    }
                 ),
             )
 
         self._name = user_input[CONF_NAME]
         return await self.async_step_pick_implementation()
 
-    async def async_oauth_create_entry(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_oauth_create_entry(
+        self, data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create an entry for the flow."""
         self.flow_impl: ZoomOAuth2Implementation
         data.update(
