@@ -11,7 +11,9 @@ from .api import ZoomAPI
 from .const import DEFAULT_NAME, DOMAIN
 
 
-class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+class ZoomOAuth2Implementation(
+    config_entry_oauth2_flow.LocalOAuth2Implementation
+):
     """Oauth2 implementation that only uses the external url."""
 
     def __init__(
@@ -27,7 +29,12 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         """Initialize local auth implementation."""
         self._webhook_id = webhook_id
         super().__init__(
-            hass, domain, client_id, client_secret, authorize_url, token_url,
+            hass,
+            domain,
+            client_id,
+            client_secret,
+            authorize_url,
+            token_url,
         )
 
     @property
@@ -50,7 +57,9 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
 class ZoomBaseEntity(Entity):
     """Base class for a Zoom automation entity."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
         """Initialize class."""
         self._config_entry = config_entry
         self._hass = hass

@@ -1,5 +1,9 @@
 """Constants for the Zoom Automation integration."""
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.helpers import config_validation as cv
 import voluptuous as vol
 
