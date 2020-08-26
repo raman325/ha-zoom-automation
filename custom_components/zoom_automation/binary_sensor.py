@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .common import ZoomBaseEntity
 from .const import (
     ATTR_EVENT,
-    HA_OCCUPANCY_EVENT,
+    HA_ZOOM_EVENT,
     OCCUPANCY_EVENT,
     OCCUPANCY_ID,
     OCCUPANCY_STATUS,
@@ -22,9 +22,7 @@ _LOGGER = getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
-    config_entry: ConfigEntry,
-    async_add_entities,
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities,
 ) -> None:
     """Set up a Zoom Automation presence sensor entry."""
     async_add_entities(
@@ -74,7 +72,7 @@ class ZoomOccupancySensor(ZoomBaseEntity):
         """Register callbacks when entity is added."""
         # Register callback for webhook event
         self._async_unsub_listeners.append(
-            self.hass.bus.async_listen(HA_OCCUPANCY_EVENT, self.async_update_status)
+            self.hass.bus.async_listen(HA_ZOOM_EVENT, self.async_update_status)
         )
 
     async def async_will_remove_from_hass(self) -> None:

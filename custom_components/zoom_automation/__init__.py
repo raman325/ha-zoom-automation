@@ -54,10 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Zoom from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+        implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
     except ValueError:
         implementation = ZoomOAuth2Implementation(
@@ -75,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     )
 
+    # Register view
     hass.http.register_view(ZoomWebhookRequestView(entry.data[CONF_VERIFICATION_TOKEN]))
 
     for platform in PLATFORMS:

@@ -13,13 +13,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.util import slugify
 
 from .api import ZoomAPI
-from .const import (
-    DEFAULT_NAME,
-    DOMAIN,
-    HA_OCCUPANCY_EVENT,
-    HA_URL,
-    WEBHOOK_RESPONSE_SCHEMA,
-)
+from .const import DEFAULT_NAME, DOMAIN, HA_URL, HA_ZOOM_EVENT, WEBHOOK_RESPONSE_SCHEMA
 
 _LOGGER = getLogger(__name__)
 
@@ -40,12 +34,7 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         """Initialize local auth implementation."""
         self._verification_token = verification_token
         super().__init__(
-            hass,
-            domain,
-            client_id,
-            client_secret,
-            authorize_url,
-            token_url,
+            hass, domain, client_id, client_secret, authorize_url, token_url,
         )
 
     @property
@@ -113,7 +102,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
             data = await request.json()
             status = WEBHOOK_RESPONSE_SCHEMA(data)
             _LOGGER.debug("Received well-formed event: %s", json.dumps(status))
-            hass.bus.async_fire(HA_OCCUPANCY_EVENT, status)
+            hass.bus.async_fire(HA_ZOOM_EVENT, status)
         except:
             _LOGGER.warning("Received unknown event: %s", await request.text())
 

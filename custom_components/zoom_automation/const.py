@@ -24,6 +24,8 @@ ZOOM_SCHEMA = vol.Schema(
     }
 )
 
+CONF_VERIFICATION_TOKEN = "verification_token"
+
 ATTR_EVENT = "event"
 ATTR_PAYLOAD = "payload"
 ATTR_OBJECT = "object"
@@ -35,7 +37,7 @@ OCCUPANCY_STATUS = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_PRESENCE_STATUS]
 OCCUPANCY_ID = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_ID]
 OCCUPANCY_STATUS_OFF = "Available"
 
-HA_OCCUPANCY_EVENT = f"{DOMAIN}_webhook"
+HA_ZOOM_EVENT = f"{DOMAIN}_webhook"
 
 WEBHOOK_RESPONSE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_EVENT): cv.string, vol.Required(ATTR_PAYLOAD): dict}
