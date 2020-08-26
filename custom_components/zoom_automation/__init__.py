@@ -66,7 +66,7 @@ async def handle_webhook(hass: HomeAssistant, webhook_id: str, request: Request)
         status = WEBHOOK_RESPONSE_SCHEMA(data)
         _LOGGER.debug("Received webhook: %s", json.dumps(status))
     except:
-        _LOGGER.warning("Received unknown webhook event: %s", json.dumps(data))
+        _LOGGER.warning("Received unknown webhook event: %s", await request.text())
         return
 
     hass.bus.async_fire(HA_CONNECTIVITY_EVENT, status)
@@ -76,10 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Zoom from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+        implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
     except ValueError:
         implementation = ZoomOAuth2Implementation(
