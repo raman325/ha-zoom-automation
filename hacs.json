@@ -2,7 +2,6 @@
     "name": "Zoom Automation",
     "hacs": "0.24.0",
     "domains": ["binary_sensor", "sensor"],
-    "zip_release": true,
     "iot_class": "Cloud Push",
     "render_readme": true,
     "homeassistant": "0.110.0"
