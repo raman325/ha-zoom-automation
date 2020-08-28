@@ -1,7 +1,7 @@
 """API for Zoom Automation bound to Home Assistant OAuth."""
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from custom_components.zoom_automation.const import BASE_URL, USER_PROFILE
+from .const import BASE_URL, USER_PROFILE
 
 
 class ZoomAPI:

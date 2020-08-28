@@ -1,5 +1,5 @@
 {
-    "name": "Zoom Automation",
+    "name": "Zoom",
     "hacs": "0.24.0",
     "domains": ["binary_sensor", "sensor"],
     "zip_release": true,

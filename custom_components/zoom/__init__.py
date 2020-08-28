@@ -1,7 +1,7 @@
-"""The Zoom Automation integration."""
+"""The Zoom integration."""
 from logging import getLogger
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ENTRY_STATE_LOADED, SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -9,7 +9,11 @@ from homeassistant.helpers.typing import ConfigType
 import voluptuous as vol
 
 from .api import ZoomAPI
-from .common import ZoomOAuth2Implementation, ZoomWebhookRequestView
+from .common import (
+    ZoomDataUpdateCoordinator,
+    ZoomOAuth2Implementation,
+    ZoomWebhookRequestView,
+)
 from .config_flow import OAuth2FlowHandler
 from .const import (
     CONF_VERIFICATION_TOKEN,
@@ -27,7 +31,7 @@ PLATFORMS = ["binary_sensor", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):
-    """Set up the Zoom Automation component."""
+    """Set up the Zoom component."""
     hass.data.setdefault(DOMAIN, {})
 
     if DOMAIN not in config:
@@ -54,10 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Zoom from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+        implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
     except ValueError:
         implementation = ZoomOAuth2Implementation(
@@ -71,12 +73,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         OAuth2FlowHandler.async_register_implementation(hass, implementation)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ZoomAPI(
-        config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    )
+    if "coordinator" not in hass.data[DOMAIN]:
+        coordinator = ZoomDataUpdateCoordinator(
+            hass,
+            ZoomAPI(
+                config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+            ),
+        )
+        await coordinator.async_refresh()
+        hass.data[DOMAIN]["coordinator"] = coordinator
 
-    # Register view
-    hass.http.register_view(ZoomWebhookRequestView(entry.data[CONF_VERIFICATION_TOKEN]))
+        # Register view
+        hass.http.register_view(
+            ZoomWebhookRequestView(entry.data[CONF_VERIFICATION_TOKEN])
+        )
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -86,8 +96,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
+    hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    if (
+        not any(
+            entry.state == ENTRY_STATE_LOADED
+            and entry.entry_id != config_entry.entry_id
+            for entry in hass.config_entries.async_entries(DOMAIN)
+        )
+        and "coordinator" in hass.data[DOMAIN]
+    ):
+        hass.data[DOMAIN].pop("coordinator")
 
     return True
