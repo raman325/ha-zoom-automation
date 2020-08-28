@@ -122,9 +122,9 @@ class ZoomWebhookRequestView(HomeAssistantView):
         hass = request.app["hass"]
         headers = request.headers
 
-        if (
-            not ("authorization" in headers
-            and headers["authorization"] == self._verification_token)
+        if not (
+            "authorization" in headers
+            and headers["authorization"] == self._verification_token
         ):
             _LOGGER.warning(
                 "Received unauthorized request: %s (Headers: %s)",
@@ -139,7 +139,9 @@ class ZoomWebhookRequestView(HomeAssistantView):
                 _LOGGER.debug("Received event: %s", json.dumps(status))
                 hass.bus.async_fire(HA_ZOOM_EVENT, status)
             except:
-                _LOGGER.warning("Received authorized but unknown event: %s", await request.text())
+                _LOGGER.warning(
+                    "Received authorized but unknown event: %s", await request.text()
+                )
 
         return Response(status=HTTP_OK)
 

@@ -41,10 +41,14 @@ class ZoomProfileSensor(ZoomBaseEntity):
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return additional state attributes."""
-        return {
-            "id": self._coordinator.data.get("id"),
-            "first_name": self._coordinator.data.get("first_name"),
-            "last_name": self._coordinator.data.get("last_name"),
-            "email": self._coordinator.data.get("email"),
-            "account_id": self._coordinator.data.get("account_id"),
-        } if self._coordinator.data else None
+        return (
+            {
+                "id": self._coordinator.data.get("id"),
+                "first_name": self._coordinator.data.get("first_name"),
+                "last_name": self._coordinator.data.get("last_name"),
+                "email": self._coordinator.data.get("email"),
+                "account_id": self._coordinator.data.get("account_id"),
+            }
+            if self._coordinator.data
+            else None
+        )
