@@ -48,7 +48,7 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
         """Initialize base sensor."""
         super().__init__(hass, config_entry)
         self._zoom_event_state = None
-        self._is_on = False
+        self._state = STATE_OFF
 
     async def async_event_received(self, event: Event):
         """Update status if event received for this entity."""
@@ -58,9 +58,11 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
             == self._coordinator.data.get("id", "").lower()
         ):
             self._zoom_event_state = get_data_from_path(event.data, CONNECTIVITY_STATUS)
-            self._is_on = (
-                self._zoom_event_state
+            self._state = (
+                STATE_ON
+                if self._zoom_event_state
                 and self._zoom_event_state.lower() == CONNECTIVITY_STATUS_ON.lower()
+                else STATE_OFF
             )
             self.async_write_ha_state()
 
@@ -74,7 +76,8 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
         )
 
         restored_state = await self.async_get_last_state()
-        self._is_on = restored_state and restored_state.state == STATE_ON
+        if restored_state:
+            self._state = restored_state.state
 
     @property
     def name(self) -> str:
@@ -82,9 +85,14 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
         return f"Zoom {self._name}"
 
     @property
+    def state(self) -> str:
+        """Entity state."""
+        return self._state
+
+    @property
     def is_on(self) -> str:
         """Return true if the binary sensor is on."""
-        return self._is_on
+        return self._state == STATE_ON
 
     @property
     def assumed_state(self) -> bool:
