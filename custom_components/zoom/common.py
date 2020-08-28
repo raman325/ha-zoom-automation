@@ -1,15 +1,18 @@
-"""Common classes and functions for Zoom Automation."""
+"""Common classes and functions for Zoom."""
+from datetime import timedelta
 import json
 from logging import getLogger
+from typing import Any, Dict
 
 from aiohttp.web import Request, Response
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, HTTP_OK
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
 from .api import ZoomAPI
@@ -66,8 +69,32 @@ class ZoomBaseEntity(Entity):
         """Initialize class."""
         self._config_entry = config_entry
         self._hass = hass
-        self._api: ZoomAPI = hass.data[DOMAIN][config_entry.entry_id]
+        self._coordinator: ZoomDataUpdateCoordinator = hass.data[DOMAIN]["coordinator"]
         self._name: str = config_entry.data[CONF_NAME]
+        self._async_unsub_listeners = []
+
+    async def async_update(self) -> None:
+        """Request coordinator update."""
+        await self._coordinator.async_request_refresh()
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks when entity is added."""
+
+        @callback
+        def profile_update():
+            """Update profile."""
+            self.async_write_ha_state()
+
+        self._async_unsub_listeners.append(
+            self._coordinator.async_add_listener(profile_update)
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect callbacks when entity is removed."""
+        for listener in self._async_unsub_listeners:
+            listener()
+
+        self._async_unsub_listeners.clear()
 
     @property
     def unique_id(self):
@@ -112,3 +139,25 @@ class ZoomWebhookRequestView(HomeAssistantView):
             _LOGGER.warning("Received unknown event: %s", await request.text())
 
         return Response(status=HTTP_OK)
+
+
+class ZoomDataUpdateCoordinator(DataUpdateCoordinator):
+    """Define an object to hold Vizio app config data."""
+
+    def __init__(self, hass: HomeAssistant, api: ZoomAPI) -> None:
+        """Initialize."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(days=1),
+            update_method=self._async_update_data,
+        )
+        self._api = api
+
+    async def _async_update_data(self) -> Dict[str, Any]:
+        """Update data via library."""
+        try:
+            return await self._api.async_get_user_profile()
+        except:
+            raise UpdateFailed

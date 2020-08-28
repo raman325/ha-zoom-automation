@@ -1,4 +1,4 @@
-"""Sensor platform for Zoom Automation."""
+"""Sensor platform for Zoom."""
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
@@ -26,7 +26,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities,
 ) -> None:
-    """Set up a Zoom Automation presence sensor entry."""
+    """Set up a Zoom presence sensor entry."""
     async_add_entities(
         [ZoomOccupancySensor(hass, config_entry)],
         update_before_add=True,
@@ -44,30 +44,23 @@ def get_data_from_path(data: Dict[str, Any], path: List[str]) -> Optional[str]:
 
 
 class ZoomOccupancySensor(ZoomBaseEntity):
-    """Class for a Zoom Automation user profile sensor."""
+    """Class for a Zoom user profile sensor."""
 
     def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
         """Initialize base sensor."""
         super().__init__(hass, config_entry)
-        self._state: str = STATE_OFF
-        self._async_unsub_listeners = []
+        self._zoom_presence_status = None
 
     async def async_update_status(self, event: Event):
         """Update status if event received for this entity."""
-        profile = await self._api.async_get_user_profile()
-
         if (
             event.data[ATTR_EVENT] == OCCUPANCY_EVENT
             and get_data_from_path(event.data, OCCUPANCY_ID).lower()
-            == profile["id"].lower()
+            == self._coordinator.data.get("id", "").lower()
         ):
-            self._state = (
-                STATE_OFF
-                if get_data_from_path(event.data, OCCUPANCY_STATUS).lower()
-                == OCCUPANCY_STATUS_OFF.lower()
-                else STATE_ON
-            )
-
+            self._zoom_presence_status = get_data_from_path(
+                event.data, OCCUPANCY_STATUS
+            ).lower()
             self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -92,12 +85,27 @@ class ZoomOccupancySensor(ZoomBaseEntity):
     @property
     def state(self) -> str:
         """Entity state."""
-        return self._state
+        return (
+            STATE_OFF
+            if not self._zoom_presence_status
+            or self._zoom_presence_status == OCCUPANCY_STATUS_OFF.lower()
+            else STATE_ON
+        )
 
     @property
     def should_poll(self) -> bool:
         """Should entity be polled."""
         return False
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        return True
+
+    @property
+    def icon(self) -> str:
+        """Entity icon."""
+        return "mdi:do-not-disturb"
 
     @property
     def device_class(self):

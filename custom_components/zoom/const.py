@@ -1,10 +1,10 @@
-"""Constants for the Zoom Automation integration."""
+"""Constants for the Zoom integration."""
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_validation as cv
 import voluptuous as vol
 
-DOMAIN = "zoom_automation"
-DEFAULT_NAME = "Zoom Automation"
+DOMAIN = "zoom"
+DEFAULT_NAME = "Zoom"
 
 HA_URL = f"/api/{DOMAIN}"
 
