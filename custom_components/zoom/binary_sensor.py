@@ -22,11 +22,14 @@ _LOGGER = getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities,
+    hass: HomeAssistantType,
+    config_entry: ConfigEntry,
+    async_add_entities,
 ) -> None:
     """Set up a Zoom presence sensor entry."""
     async_add_entities(
-        [ZoomOccupancySensor(hass, config_entry)], update_before_add=True,
+        [ZoomOccupancySensor(hass, config_entry)],
+        update_before_add=True,
     )
 
 
