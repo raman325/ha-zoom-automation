@@ -99,6 +99,11 @@ class ZoomBaseEntity(Entity):
         """Return unique_id for entity."""
         return f"{DOMAIN}_{slugify(self._name)}"
 
+    @property
+    def should_poll(self) -> bool:
+        """Should entity be polled."""
+        return False
+
 
 class ZoomWebhookRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
@@ -118,23 +123,23 @@ class ZoomWebhookRequestView(HomeAssistantView):
         headers = request.headers
 
         if (
-            "authorization" not in headers
-            or headers["authorization"] != self._verification_token
+            not ("authorization" in headers
+            and headers["authorization"] == self._verification_token)
         ):
             _LOGGER.warning(
-                "Unauthorized request received: %s (Headers: %s)",
+                "Received unauthorized request: %s (Headers: %s)",
                 await request.text(),
                 json.dumps(request.headers),
             )
             return Response(status=HTTP_OK)
-
-        try:
-            data = await request.json()
-            status = WEBHOOK_RESPONSE_SCHEMA(data)
-            _LOGGER.debug("Received well-formed event: %s", json.dumps(status))
-            hass.bus.async_fire(HA_ZOOM_EVENT, status)
-        except:
-            _LOGGER.warning("Received unknown event: %s", await request.text())
+        else:
+            try:
+                data = await request.json()
+                status = WEBHOOK_RESPONSE_SCHEMA(data)
+                _LOGGER.debug("Received event: %s", json.dumps(status))
+                hass.bus.async_fire(HA_ZOOM_EVENT, status)
+            except:
+                _LOGGER.warning("Received authorized but unknown event: %s", await request.text())
 
         return Response(status=HTTP_OK)
 
