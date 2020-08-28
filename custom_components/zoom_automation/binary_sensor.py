@@ -50,7 +50,7 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
         self._zoom_event_state = None
         self._state = STATE_OFF
 
-    async def async_event_received(self, event: Event):
+    async def async_event_received(self, event: Event) -> None:
         """Update status if event received for this entity."""
         if (
             event.data[ATTR_EVENT] == CONNECTIVITY_EVENT
@@ -90,7 +90,7 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
         return self._state
 
     @property
-    def is_on(self) -> str:
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._state == STATE_ON
 
@@ -105,7 +105,7 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
         return "mdi:do-not-disturb"
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_CONNECTIVITY
 

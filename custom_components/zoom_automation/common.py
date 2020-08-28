@@ -33,7 +33,7 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         authorize_url: str,
         token_url: str,
         verification_token: str,
-    ):
+    ) -> None:
         """Initialize local auth implementation."""
         self._verification_token = verification_token
         super().__init__(
@@ -95,7 +95,7 @@ class ZoomBaseEntity(Entity):
         self._async_unsub_listeners.clear()
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique_id for entity."""
         return f"{DOMAIN}_{slugify(self._name)}"
 
@@ -117,7 +117,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
         """Initialize view."""
         self._verification_token = verification_token
 
-    async def post(self, request: Request):
+    async def post(self, request: Request) -> Response:
         """Respond to requests from the device."""
         hass = request.app["hass"]
         headers = request.headers
@@ -131,7 +131,6 @@ class ZoomWebhookRequestView(HomeAssistantView):
                 await request.text(),
                 json.dumps(request.headers),
             )
-            return Response(status=HTTP_OK)
         else:
             try:
                 data = await request.json()
