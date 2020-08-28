@@ -1,5 +1,5 @@
 {
-  "domain": "zoom",
+  "domain": "zoom_automation",
   "name": "Zoom",
   "config_flow": true,
   "documentation": "https://github.com/raman325/ha-zoom-automation",

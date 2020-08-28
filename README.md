@@ -1,7 +1,5 @@
 {% if installed %}
 
-2020-08-27 - **BREAKING CHANGE: Renamed integration from `zoom_automation` to `zoom`. The callback URL listed in step 11 of `Installation>Set up your Zoom app` as well as the event name (used to be `zoom_automation_webhook` but is now `zoom_webhook`) has accordingly changed.**
-
 2020-08-26 - **BREAKING CHANGE: If you have previously setup this automation, the options required in your configuration have changed. Remove the existing configuration and update your configuration as defined in step 2 of the Installation>Configuring HomeAssistant section below. Note that the `Event notification endpoint URL` in step 11 of the `Installation>Set up your Zoom app` has changed as well and will need to be updated.**
 
 2020-08-26 - **BREAKING CHANGE: If you have previously created webhook automations, you will need to update them to be event automations using the `zoom_automation_webhook` event. The latest update will not work properly without this change.**
@@ -19,8 +17,6 @@
 [![Community Forum][forum-shield]][forum]
 
 {% if installed %}
-
-2020-08-27 - **BREAKING CHANGE: Renamed integration from `zoom_automation` to `zoom`. The callback URL listed in step 11 of `Installation>Set up your Zoom app` as well as the event name (used to be `zoom_automation_webhook` but is now `zoom_webhook`) has accordingly changed.**
 
 2020-08-26 - **BREAKING CHANGE: If you have previously setup this automation, the options required in your configuration have changed. Remove the existing configuration and update your configuration as defined in step 2 of the Installation>Configuring HomeAssistant section below. Note that the `Event notification endpoint URL` in step 11 of the `Installation>Set up your Zoom app` has changed as well and will need to be updated.**
 
@@ -77,7 +73,7 @@ You will get two sensors out of the box:
 8. Make note of the `Verification Token` on the `Feature` page as you will need it for your configuration later.
 9. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
 10. Enter a name for this subscription (does not matter).
-11. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/zoom`.
+11. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/zoom_automation`.
 12. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. To use the `binary_sensor` provided by the integration, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`. If you want to get more details about when you start a meeting, add `Start Meeting` under `Meeting`.
 13. Once you are done, click `Done`, then `Save` the subscription before hitting `Continue`.
 14. The `Scopes` section should already be updated to the permissions the app would need for the events you selected earlier. Click `Continue`.
@@ -99,7 +95,7 @@ You can either do the initial setup through the UI or in your `configuration.yam
 1. Click Install
 2. Create a new top level configuration item in `configuration.yaml` as follows (you may need to restart your HA instance to pick up the changes once they are added):
 ```yaml
-zoom:
+zoom_automation:
     client_id: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
     client_secret: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
     verification_token: <VERIFICATION_TOKEN_FROM_THE_FEATURE_PAGE_OF_YOUR_CUSTOM_ZOOM_APP>
@@ -146,7 +142,7 @@ Your trigger configuration should be as follows:
 ```yaml
 trigger:
     platform: event
-    event_type: zoom_webhook
+    event_type: zoom_automation_webhook
     event_data:
         event: <ZOOM_EVENT_NAME>
 ```
@@ -173,7 +169,7 @@ You can use some `input_text`s with an automation too, like this:
   description: ''
   trigger:
   - platform: event
-    event_type: zoom_webhook
+    event_type: zoom_automation_webhook
   condition: []
   action:
   - choose:
