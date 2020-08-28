@@ -12,11 +12,11 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .common import ZoomBaseEntity
 from .const import (
     ATTR_EVENT,
-    HA_ZOOM_EVENT,
     CONNECTIVITY_EVENT,
     CONNECTIVITY_ID,
     CONNECTIVITY_STATUS,
     CONNECTIVITY_STATUS_ON,
+    HA_ZOOM_EVENT,
 )
 
 _LOGGER = getLogger(__name__)
