@@ -37,12 +37,7 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         """Initialize local auth implementation."""
         self._verification_token = verification_token
         super().__init__(
-            hass,
-            domain,
-            client_id,
-            client_secret,
-            authorize_url,
-            token_url,
+            hass, domain, client_id, client_secret, authorize_url, token_url
         )
 
     @property
@@ -79,6 +74,7 @@ class ZoomBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
+        await super().async_added_to_hass()
 
         @callback
         def profile_update():
@@ -91,6 +87,8 @@ class ZoomBaseEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks when entity is removed."""
+        await super().async_will_remove_from_hass()
+
         for listener in self._async_unsub_listeners:
             listener()
 
@@ -100,6 +98,11 @@ class ZoomBaseEntity(Entity):
     def unique_id(self):
         """Return unique_id for entity."""
         return f"{DOMAIN}_{slugify(self._name)}"
+
+    @property
+    def should_poll(self) -> bool:
+        """Should entity be polled."""
+        return False
 
 
 class ZoomWebhookRequestView(HomeAssistantView):
@@ -119,24 +122,26 @@ class ZoomWebhookRequestView(HomeAssistantView):
         hass = request.app["hass"]
         headers = request.headers
 
-        if (
-            "authorization" not in headers
-            or headers["authorization"] != self._verification_token
+        if not (
+            "authorization" in headers
+            and headers["authorization"] == self._verification_token
         ):
             _LOGGER.warning(
-                "Unauthorized request received: %s (Headers: %s)",
+                "Received unauthorized request: %s (Headers: %s)",
                 await request.text(),
                 json.dumps(request.headers),
             )
             return Response(status=HTTP_OK)
-
-        try:
-            data = await request.json()
-            status = WEBHOOK_RESPONSE_SCHEMA(data)
-            _LOGGER.debug("Received well-formed event: %s", json.dumps(status))
-            hass.bus.async_fire(HA_ZOOM_EVENT, status)
-        except:
-            _LOGGER.warning("Received unknown event: %s", await request.text())
+        else:
+            try:
+                data = await request.json()
+                status = WEBHOOK_RESPONSE_SCHEMA(data)
+                _LOGGER.debug("Received event: %s", json.dumps(status))
+                hass.bus.async_fire(HA_ZOOM_EVENT, status)
+            except:
+                _LOGGER.warning(
+                    "Received authorized but unknown event: %s", await request.text()
+                )
 
         return Response(status=HTTP_OK)
 
