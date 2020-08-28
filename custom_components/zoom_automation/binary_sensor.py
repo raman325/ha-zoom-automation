@@ -2,7 +2,7 @@
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
+from homeassistant.components.binary_sensor import BinarySensorEntity, DEVICE_CLASS_CONNECTIVITY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Event
@@ -41,14 +41,14 @@ def get_data_from_path(data: Dict[str, Any], path: List[str]) -> Optional[str]:
     return None
 
 
-class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity):
+class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
     """Class for a Zoom user profile sensor."""
 
     def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
         """Initialize base sensor."""
         super().__init__(hass, config_entry)
         self._zoom_event_state = None
-        self._state = STATE_OFF
+        self._is_on = False
 
     async def async_event_received(self, event: Event):
         """Update status if event received for this entity."""
@@ -58,11 +58,9 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity):
             == self._coordinator.data.get("id", "").lower()
         ):
             self._zoom_event_state = get_data_from_path(event.data, CONNECTIVITY_STATUS)
-            self._state = (
-                STATE_ON
-                if self._zoom_event_state
+            self._is_on = (
+                self._zoom_event_state
                 and self._zoom_event_state.lower() == CONNECTIVITY_STATUS_ON.lower()
-                else STATE_OFF
             )
             self.async_write_ha_state()
 
@@ -76,8 +74,7 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity):
         )
 
         restored_state = await self.async_get_last_state()
-        if restored_state:
-            self._state = restored_state.state
+        self._is_on = restored_state and restored_state.state == STATE_ON
 
     @property
     def name(self) -> str:
@@ -85,14 +82,9 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity):
         return f"Zoom {self._name}"
 
     @property
-    def state(self) -> str:
-        """Entity state."""
-        return self._state
-
-    @property
-    def should_poll(self) -> bool:
-        """Should entity be polled."""
-        return False
+    def is_on(self) -> str:
+        """Return true if the binary sensor is on."""
+        return self._is_on
 
     @property
     def assumed_state(self) -> bool:
