@@ -86,7 +86,7 @@ You can either do the initial setup through the UI or in your `configuration.yam
 #### Using the UI
 
 1. Click Install
-2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
+2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom". Select it.
 3. You will be asked to provide the `Client ID` and `Client Secret` that Zoom gave you earlier as well as the `Verification Token` as you grabbed from Zoom in the earlier section. Enter them in and click Submit.
 4. Skip to "Finish Setup" section below
 
@@ -100,7 +100,7 @@ zoom_automation:
     client_secret: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
     verification_token: <VERIFICATION_TOKEN_FROM_THE_FEATURE_PAGE_OF_YOUR_CUSTOM_ZOOM_APP>
 ```
-3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom Automation". Select it.
+3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom". Select it.
 4. Skip to "Finish Setup" section below
 
 ### Finish setup
@@ -118,7 +118,7 @@ zoom_automation:
 
 In some cases, you may want to receive events for more than one Zoom account.
 
-You can add the Zoom integration as many times as you would like with a single `client_id`/`client_secret` configured by going back to the Integrations UI and adding `Zoom Automation` again. As long as you log off Zoom after each time, you will be able to connect your app to each account you want to monitor.
+You can add the Zoom integration as many times as you would like with a single `client_id`/`client_secret` configured by going back to the Integrations UI and adding `Zoom` again. As long as you log off Zoom after each time, you will be able to connect your app to each account you want to monitor.
 
 ### For users who used the Advanced Installation method
 
