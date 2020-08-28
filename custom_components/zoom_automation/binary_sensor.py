@@ -2,7 +2,7 @@
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
+from homeassistant.components.binary_sensor import BinarySensorEntity, DEVICE_CLASS_CONNECTIVITY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Event
@@ -41,7 +41,7 @@ def get_data_from_path(data: Dict[str, Any], path: List[str]) -> Optional[str]:
     return None
 
 
-class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity):
+class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
     """Class for a Zoom user profile sensor."""
 
     def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
@@ -50,7 +50,7 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity):
         self._zoom_event_state = None
         self._state = STATE_OFF
 
-    async def async_event_received(self, event: Event):
+    async def async_event_received(self, event: Event) -> None:
         """Update status if event received for this entity."""
         if (
             event.data[ATTR_EVENT] == CONNECTIVITY_EVENT
@@ -90,9 +90,9 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity):
         return self._state
 
     @property
-    def should_poll(self) -> bool:
-        """Should entity be polled."""
-        return False
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self._state == STATE_ON
 
     @property
     def assumed_state(self) -> bool:
@@ -105,7 +105,7 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity):
         return "mdi:do-not-disturb"
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_CONNECTIVITY
 
