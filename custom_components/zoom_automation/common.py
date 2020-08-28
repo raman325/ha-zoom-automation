@@ -37,12 +37,7 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         """Initialize local auth implementation."""
         self._verification_token = verification_token
         super().__init__(
-            hass,
-            domain,
-            client_id,
-            client_secret,
-            authorize_url,
-            token_url,
+            hass, domain, client_id, client_secret, authorize_url, token_url
         )
 
     @property
@@ -79,6 +74,7 @@ class ZoomBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
+        await super().async_added_to_hass()
 
         @callback
         def profile_update():
@@ -91,6 +87,8 @@ class ZoomBaseEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks when entity is removed."""
+        await super().async_will_remove_from_hass()
+
         for listener in self._async_unsub_listeners:
             listener()
 
