@@ -69,7 +69,7 @@ You will get two sensors out of the box:
 4. Copy your `Client ID` and `Client Secret` somewhere as you will need them later to configure Home Assistant.
 5. Enter the following `Redirect URL for OAuth`: `<BASE_HA_URL>/auth/external/callback` (replace `<BASE_HA_URL>` with the URL you use to access Home Assistant, e.g. `https://ha.example.com`)
 6. Enter your `<BASE_HA_URL>` in the `Whitelist URL` section, then hit `Continue`.
-7. The `App Name` should already be filled out. A `Short Description` and `Long Description` are required, but since this app is only for you, it doesn't matter what you enter here. Click `Continue` once you are done.
+7. The `App Name` should already be filled out. A `Short Description` and `Long Description` are required, but since this app is only for you, it doesn't matter what you enter here. You will also need to add a `Name` and `Email Address` in the `Developer Contact Information` section. Click `Continue` once you are done.
 8. Make note of the `Verification Token` on the `Feature` page as you will need it for your configuration later.
 9. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
 10. Enter a name for this subscription (does not matter).

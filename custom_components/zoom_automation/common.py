@@ -15,8 +15,15 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
-from .api import ZoomAPI
-from .const import DEFAULT_NAME, DOMAIN, HA_URL, HA_ZOOM_EVENT, WEBHOOK_RESPONSE_SCHEMA
+from .const import (
+    BASE_URL,
+    DEFAULT_NAME,
+    DOMAIN,
+    HA_URL,
+    HA_ZOOM_EVENT,
+    USER_PROFILE_URL,
+    WEBHOOK_RESPONSE_SCHEMA,
+)
 
 _LOGGER = getLogger(__name__)
 
@@ -148,7 +155,9 @@ class ZoomWebhookRequestView(HomeAssistantView):
 class ZoomDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold Vizio app config data."""
 
-    def __init__(self, hass: HomeAssistant, api: ZoomAPI) -> None:
+    def __init__(
+        self, hass: HomeAssistant, oauth_session: config_entry_oauth2_flow.OAuth2Session
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
@@ -157,11 +166,14 @@ class ZoomDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(days=1),
             update_method=self._async_update_data,
         )
-        self._api = api
+        self._oauth_session = oauth_session
 
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via library."""
         try:
-            return await self._api.async_get_user_profile()
+            resp = await self._oauth_session.async_request(
+                "get", f"{BASE_URL}{USER_PROFILE_URL}", raise_for_status=True
+            )
+            return await resp.json()
         except:
             raise UpdateFailed

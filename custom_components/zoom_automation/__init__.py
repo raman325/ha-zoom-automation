@@ -8,7 +8,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.typing import ConfigType
 import voluptuous as vol
 
-from .api import ZoomAPI
 from .common import (
     ZoomDataUpdateCoordinator,
     ZoomOAuth2Implementation,
@@ -78,9 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if "coordinator" not in hass.data[DOMAIN]:
         coordinator = ZoomDataUpdateCoordinator(
             hass,
-            ZoomAPI(
-                config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-            ),
+            config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation),
         )
         await coordinator.async_refresh()
         hass.data[DOMAIN]["coordinator"] = coordinator
