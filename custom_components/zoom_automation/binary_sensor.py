@@ -2,7 +2,10 @@
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
-from homeassistant.components.binary_sensor import BinarySensorEntity, DEVICE_CLASS_CONNECTIVITY
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    DEVICE_CLASS_CONNECTIVITY,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Event

@@ -14,7 +14,7 @@ OAUTH2_AUTHORIZE = "https://zoom.us/oauth/authorize"
 OAUTH2_TOKEN = "https://zoom.us/oauth/token"
 
 BASE_URL = "https://api.zoom.us/v2/"
-USER_PROFILE = "users/me"
+USER_PROFILE_URL = "users/me"
 
 ZOOM_SCHEMA = vol.Schema(
     {
