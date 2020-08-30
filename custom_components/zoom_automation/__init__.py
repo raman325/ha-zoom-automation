@@ -1,24 +1,27 @@
 """The Zoom integration."""
 from logging import getLogger
 
-from homeassistant.config_entries import ENTRY_STATE_LOADED, SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.typing import ConfigType
 import voluptuous as vol
 
+from .api import ZoomAPI
 from .common import (
-    ZoomDataUpdateCoordinator,
     ZoomOAuth2Implementation,
+    ZoomUserProfileDataUpdateCoordinator,
     ZoomWebhookRequestView,
 )
 from .config_flow import OAuth2FlowHandler
 from .const import (
+    API,
     CONF_VERIFICATION_TOKEN,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
+    USER_PROFILE_COORDINATOR,
     ZOOM_SCHEMA,
 )
 
@@ -74,18 +77,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         OAuth2FlowHandler.async_register_implementation(hass, implementation)
 
-    if "coordinator" not in hass.data[DOMAIN]:
-        coordinator = ZoomDataUpdateCoordinator(
-            hass,
-            config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation),
-        )
-        await coordinator.async_refresh()
-        hass.data[DOMAIN]["coordinator"] = coordinator
+    api = ZoomAPI(config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation))
+    coordinator = ZoomUserProfileDataUpdateCoordinator(hass, api)
+    await coordinator.async_refresh()
+    hass.data[DOMAIN][entry.entry_id] = {}
+    hass.data[DOMAIN][entry.entry_id][USER_PROFILE_COORDINATOR] = coordinator
+    hass.data[DOMAIN][entry.entry_id][API] = api
 
-        # Register view
-        hass.http.register_view(
-            ZoomWebhookRequestView(entry.data[CONF_VERIFICATION_TOKEN])
-        )
+    # Register view
+    hass.http.register_view(ZoomWebhookRequestView(entry.data[CONF_VERIFICATION_TOKEN]))
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -98,15 +98,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
     hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    if (
-        not any(
-            entry.state == ENTRY_STATE_LOADED
-            and entry.entry_id != config_entry.entry_id
-            for entry in hass.config_entries.async_entries(DOMAIN)
-        )
-        and "coordinator" in hass.data[DOMAIN]
-    ):
-        hass.data[DOMAIN].pop("coordinator")
 
     return True

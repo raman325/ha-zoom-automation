@@ -3,8 +3,8 @@ from logging import getLogger
 from typing import Any, Dict, List, Optional
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
     DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -53,6 +53,20 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
         self._zoom_event_state = None
         self._state = STATE_OFF
 
+    def _set_state(self, zoom_event_state: str) -> None:
+        """Set Zoom and HA state."""
+        self._zoom_event_state = zoom_event_state
+        self._state = (
+            STATE_ON
+            if self._zoom_event_state
+            and self._zoom_event_state.lower() == CONNECTIVITY_STATUS_ON.lower()
+            else STATE_OFF
+        )
+        _LOGGER.debug(
+            "Set Zoom state to %s and HA state to %s", zoom_event_state, self._state
+        )
+        self.async_write_ha_state()
+
     async def async_event_received(self, event: Event) -> None:
         """Update status if event received for this entity."""
         if (
@@ -60,14 +74,13 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
             and get_data_from_path(event.data, CONNECTIVITY_ID).lower()
             == self._coordinator.data.get("id", "").lower()
         ):
-            self._zoom_event_state = get_data_from_path(event.data, CONNECTIVITY_STATUS)
-            self._state = (
-                STATE_ON
-                if self._zoom_event_state
-                and self._zoom_event_state.lower() == CONNECTIVITY_STATUS_ON.lower()
-                else STATE_OFF
-            )
-            self.async_write_ha_state()
+            self._set_state(get_data_from_path(event.data, CONNECTIVITY_STATUS))
+
+    async def _restore_state(self) -> None:
+        """Restore state from last known state."""
+        restored_state = await self.async_get_last_state()
+        if restored_state:
+            self._state = restored_state.state
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
@@ -78,9 +91,20 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
             self.hass.bus.async_listen(HA_ZOOM_EVENT, self.async_event_received)
         )
 
-        restored_state = await self.async_get_last_state()
-        if restored_state:
-            self._state = restored_state.state
+        id = self._coordinator.data.get("id")
+        if not id:
+            _LOGGER.debug("ID not found, restoring state.")
+            await self._restore_state()
+
+        try:
+            status = await self._api.async_get_presence_status(id)
+            _LOGGER.debug("Retrieved initial Zoom status: %s", status)
+            self._set_state(status)
+        except:
+            _LOGGER.warning(
+                "Error retrieving initial zoom status, restoring state.", exc_info=True
+            )
+            await self._restore_state()
 
     @property
     def name(self) -> str:
@@ -95,7 +119,7 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._state == STATE_ON
+        return self.state == STATE_ON
 
     @property
     def assumed_state(self) -> bool:

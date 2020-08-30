@@ -2,7 +2,7 @@
 from datetime import timedelta
 import json
 from logging import getLogger
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from aiohttp.web import Request, Response
 from homeassistant.components.http.view import HomeAssistantView
@@ -15,13 +15,14 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
+from .api import ZoomAPI
 from .const import (
-    BASE_URL,
+    API,
     DEFAULT_NAME,
     DOMAIN,
     HA_URL,
     HA_ZOOM_EVENT,
-    USER_PROFILE_URL,
+    USER_PROFILE_COORDINATOR,
     WEBHOOK_RESPONSE_SCHEMA,
 )
 
@@ -71,7 +72,10 @@ class ZoomBaseEntity(Entity):
         """Initialize class."""
         self._config_entry = config_entry
         self._hass = hass
-        self._coordinator: ZoomDataUpdateCoordinator = hass.data[DOMAIN]["coordinator"]
+        self._coordinator: ZoomUserProfileDataUpdateCoordinator = hass.data[DOMAIN][
+            config_entry.entry_id
+        ][USER_PROFILE_COORDINATOR]
+        self._api: ZoomAPI = hass.data[DOMAIN][config_entry.entry_id][API]
         self._name: str = config_entry.data[CONF_NAME]
         self._async_unsub_listeners = []
 
@@ -152,12 +156,10 @@ class ZoomWebhookRequestView(HomeAssistantView):
         return Response(status=HTTP_OK)
 
 
-class ZoomDataUpdateCoordinator(DataUpdateCoordinator):
-    """Define an object to hold Vizio app config data."""
+class ZoomUserProfileDataUpdateCoordinator(DataUpdateCoordinator):
+    """Define an object to hold Zoom user profile data."""
 
-    def __init__(
-        self, hass: HomeAssistant, oauth_session: config_entry_oauth2_flow.OAuth2Session
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, api: ZoomAPI) -> None:
         """Initialize."""
         super().__init__(
             hass,
@@ -166,14 +168,44 @@ class ZoomDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(days=1),
             update_method=self._async_update_data,
         )
-        self._oauth_session = oauth_session
+        self._api = api
 
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via library."""
         try:
-            resp = await self._oauth_session.async_request(
-                "get", f"{BASE_URL}{USER_PROFILE_URL}", raise_for_status=True
-            )
-            return await resp.json()
+            return await self._api.async_get_my_user_profile()
+        except:
+            raise UpdateFailed
+
+
+class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
+    """Define an object to hold Zoom Contact List data."""
+
+    def __init__(
+        self, hass: HomeAssistant, api: ZoomAPI, contact_types: List[str] = ["external"]
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(hours=1),
+            update_method=self._async_update_data,
+        )
+        self._api = ZoomAPI
+        self._contact_types = contact_types
+
+    async def _async_update_data(self) -> Dict[str, Any]:
+        """Update data via library."""
+        try:
+            contacts = []
+            for contact_type in self._contact_types:
+                new_contacts = await self._api.async_get_all_contacts(contact_type)
+
+                for contact in new_contacts:
+                    contact["contact_type"] = contact_type
+                contacts.extend(new_contacts)
+
+            return contacts
         except:
             raise UpdateFailed
