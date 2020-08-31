@@ -4,7 +4,7 @@ from homeassistant.helpers import config_validation as cv
 import voluptuous as vol
 
 API = "api"
-DOMAIN = "zoom_automation"
+DOMAIN = "zoom"
 DEFAULT_NAME = "Zoom"
 
 HA_URL = f"/api/{DOMAIN}"
