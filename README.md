@@ -18,15 +18,7 @@
 
 {% if installed %}
 
-<<<<<<< HEAD
-2020-08-30 **BREAKING CHANGE: The component has been renamed from `zoom_automation` to `zoom`. You will need to update the Zoom callback URL from step 11 of `Installation>Set up your Zoom app` from `<BASE_HA_URL>/api/zoom_automation` to `<BASE_HA_URL>/api/zoom`. In addition, any automations you've created on the webhook event have to use the `zoom_webhook` event instead of `zoom_automation_webhook`.**
-=======
-<<<<<<< Updated upstream
-2020-08-26 - **BREAKING CHANGE: If you have previously setup this automation, the options required in your configuration have changed. Remove the existing configuration and update your configuration as defined in step 2 of the Installation>Configuring HomeAssistant section below. Note that the `Event notification endpoint URL` in step 11 of the `Installation>Set up your Zoom app` has changed as well and will need to be updated.**
-=======
 2020-08-30 **BREAKING CHANGE: The component has been renamed from `zoom_automation` to `zoom`. You will need to update the Zoom callback URL from step 11 of `Installation>Set up your Zoom app` from `<BASE_HA_URL>/api/zoom_automation` to `<BASE_HA_URL>/api/zoom`. In addition, any automations you've created on the webhook event have to use the `zoom_webhook` event instead of `zoom_automation_webhook`. You may also want to remove the `Zoom` integration from your Integrations list, uninstall it from HACS, restart HA, and then reinstall it.**
->>>>>>> Stashed changes
->>>>>>> a3d4f07... update breaking change in README
 
 2020-08-30 **BREAKING CHANGE: The `sensor` entity is no longer available. All information from the `sensor` entity has now been collapsed into the `binary_sensor` entity.**
 
