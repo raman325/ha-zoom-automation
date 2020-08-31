@@ -1,4 +1,5 @@
 """Sensor platform for Zoom."""
+import asyncio
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
@@ -9,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Event
+from homeassistant.helpers.config_entry_oauth2_flow import DATA_IMPLEMENTATIONS
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -30,7 +32,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Zoom presence sensor entry."""
     async_add_entities(
-        [ZoomConnectivitySensor(hass, config_entry)], update_before_add=True
+        [ZoomAuthenticatedUserBinarySensor(hass, config_entry)], update_before_add=True
     )
 
 
@@ -44,14 +46,22 @@ def get_data_from_path(data: Dict[str, Any], path: List[str]) -> Optional[str]:
     return None
 
 
-class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
-    """Class for a Zoom user profile sensor."""
+class ZoomBaseBinarySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
+    """Base class for Zoom binary_sensor."""
 
     def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
         """Initialize base sensor."""
         super().__init__(hass, config_entry)
         self._zoom_event_state = None
         self._state = STATE_OFF
+
+    def _get_id(self) -> Optional[str]:
+        """Get user ID."""
+        raise NotImplemented
+
+    def _get_user_profile(self) -> Optional[Dict[str, str]]:
+        """Get user profile."""
+        raise NotImplemented
 
     def _set_state(self, zoom_event_state: str) -> None:
         """Set Zoom and HA state."""
@@ -72,7 +82,7 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
         if (
             event.data[ATTR_EVENT] == CONNECTIVITY_EVENT
             and get_data_from_path(event.data, CONNECTIVITY_ID).lower()
-            == self._coordinator.data.get("id", "").lower()
+            == self._get_id().lower()
         ):
             self._set_state(get_data_from_path(event.data, CONNECTIVITY_STATUS))
 
@@ -91,13 +101,14 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
             self.hass.bus.async_listen(HA_ZOOM_EVENT, self.async_event_received)
         )
 
-        id = self._coordinator.data.get("id")
+        id = self._get_id()
         if not id:
             _LOGGER.debug("ID not found, restoring state.")
             await self._restore_state()
 
         try:
-            status = await self._api.async_get_presence_status(id)
+            contact = await self._api.async_get_contact_user_profile(id)
+            status = contact["presence_status"]
             _LOGGER.debug("Retrieved initial Zoom status: %s", status)
             self._set_state(status)
         except:
@@ -109,7 +120,7 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
     @property
     def name(self) -> str:
         """Entity name."""
-        return f"Zoom {self._name}"
+        raise NotImplemented
 
     @property
     def state(self) -> str:
@@ -139,4 +150,74 @@ class ZoomConnectivitySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return additional state attributes."""
-        return {"status": self._zoom_event_state} if self._zoom_event_state else None
+        data = {}
+        user_profile = self._get_user_profile()
+        if user_profile:
+            data.update(
+                {
+                    "id": user_profile.get("id"),
+                    "first_name": user_profile.get("first_name"),
+                    "last_name": user_profile.get("last_name"),
+                    "email": user_profile.get("email"),
+                }
+            )
+            account_id = user_profile.get("account_id")
+            if account_id:
+                data["account_id"] = account_id
+
+        if self._zoom_event_state:
+            data["status"] = self._zoom_event_state
+
+        return data if DATA_IMPLEMENTATIONS else None
+
+
+class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
+    """Class for Zoom user profile binary sensor for authenticated user."""
+
+    def _get_id(self) -> Optional[str]:
+        """Get user ID."""
+        return self._coordinator.data.get("id", "")
+
+    def _get_user_profile(self) -> Optional[Dict[str, str]]:
+        """Get user profile."""
+        return self._coordinator.data
+
+    @property
+    def name(self) -> str:
+        """Entity name."""
+        return f"Zoom {self._name}"
+
+
+class ZoomContactUserBinarySensor(ZoomBaseBinarySensor):
+    """Class for Zoom user profile binary sensor for contacts of authenticated user."""
+
+    def __init__(
+        self, hass: HomeAssistantType, config_entry: ConfigEntry, id: str
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(hass, config_entry)
+        self._id = id
+        self._profile = None
+
+    async def async_update(self) -> None:
+        """Update state of entity."""
+        self._profile = await self._api.async_get_contact_user_profile(id)
+        self._zoom_event_state = self._profile["presence_status"]
+
+    def _get_id(self) -> Optional[str]:
+        """Get user ID."""
+        return self._id
+
+    def _get_user_profile(self) -> Optional[Dict[str, str]]:
+        """Get user profile."""
+        return self._profile
+
+    @property
+    def name(self) -> str:
+        """Entity name."""
+        return f"Zoom {self._name}"
+
+    @property
+    def should_poll(self) -> bool:
+        """Should entity be polled."""
+        return True

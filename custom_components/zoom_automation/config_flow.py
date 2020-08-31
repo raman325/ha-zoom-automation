@@ -37,6 +37,8 @@ class OAuth2FlowHandler(
     def __init__(self) -> None:
         """Intantiate config flow."""
         self._name: str = ""
+        self._picked_name: bool = False
+        self._stored_data = {}
         super().__init__()
 
     async def async_step_user(
@@ -51,7 +53,7 @@ class OAuth2FlowHandler(
                 if not await config_entry_oauth2_flow.async_get_implementations(
                     self.hass, self.DOMAIN
                 )
-                else await self.async_step_choose_name()
+                else await self.async_step_pick_implementation()
             )
 
         self.async_register_implementation(
@@ -67,7 +69,7 @@ class OAuth2FlowHandler(
             ),
         )
 
-        return await self.async_step_choose_name()
+        return await self.async_step_pick_implementation()
 
     async def async_step_choose_name(
         self, user_input: Dict[str, Any] = None
@@ -87,10 +89,16 @@ class OAuth2FlowHandler(
         )
         self._abort_if_unique_id_configured()
 
-        return await self.async_step_pick_implementation()
+        self._picked_name = True
+        return await self.async_oauth_create_entry()
 
-    async def async_oauth_create_entry(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_oauth_create_entry(self, data: Dict[str, Any] = None) -> Dict[str, Any]:
         """Create an entry for the flow."""
+        if not self._picked_name:
+            self._stored_data = data.copy()
+            return await self.async_step_choose_name()
+
+        data = self._stored_data
         self.flow_impl: ZoomOAuth2Implementation
         data.update(
             {

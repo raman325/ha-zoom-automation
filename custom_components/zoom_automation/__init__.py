@@ -29,7 +29,7 @@ _LOGGER = getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: ZOOM_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = ["binary_sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):

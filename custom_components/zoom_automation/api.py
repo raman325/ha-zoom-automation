@@ -26,7 +26,7 @@ class ZoomAPI:
         )
         return await resp.json()
 
-    async def async_get_presence_status(self, id: str) -> str:
+    async def async_get_contact_user_profile(self, id: str) -> str:
         """Get presence status for user with given ID."""
         resp = await self._oauth_session.async_request(
             "get",
@@ -34,8 +34,7 @@ class ZoomAPI:
             params={"query_presence_status": "true"},
             raise_for_status=True,
         )
-        contact = await resp.json()
-        return contact["presence_status"]
+        return await resp.json()
 
     async def async_get_all_contacts(
         self, contact_type: str = "external"
