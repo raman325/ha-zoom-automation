@@ -3,7 +3,8 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_validation as cv
 import voluptuous as vol
 
-DOMAIN = "zoom_automation"
+API = "api"
+DOMAIN = "zoom"
 DEFAULT_NAME = "Zoom"
 
 HA_URL = f"/api/{DOMAIN}"
@@ -15,6 +16,9 @@ OAUTH2_TOKEN = "https://zoom.us/oauth/token"
 
 BASE_URL = "https://api.zoom.us/v2/"
 USER_PROFILE_URL = "users/me"
+USER_PROFILE_COORDINATOR = "user_profile_coordinator"
+CONTACT_LIST_URL = "chat/users/me/contacts"
+CONTACT_LIST_COORDINATOR = "contact_list_coordinator"
 
 ZOOM_SCHEMA = vol.Schema(
     {

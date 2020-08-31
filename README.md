@@ -1,8 +1,8 @@
 {% if installed %}
 
-2020-08-26 - **BREAKING CHANGE: If you have previously setup this automation, the options required in your configuration have changed. Remove the existing configuration and update your configuration as defined in step 2 of the Installation>Configuring HomeAssistant section below. Note that the `Event notification endpoint URL` in step 11 of the `Installation>Set up your Zoom app` has changed as well and will need to be updated.**
+2020-08-30 **BREAKING CHANGE: The component has been renamed from `zoom_automation` to `zoom`. You will need to update the Zoom callback URL from step 11 of `Installation>Set up your Zoom app` from `<BASE_HA_URL>/api/zoom_automation` to `<BASE_HA_URL>/api/zoom`. In addition, any automations you've created on the webhook event have to use the `zoom_webhook` event instead of `zoom_automation_webhook`.**
 
-2020-08-26 - **BREAKING CHANGE: If you have previously created webhook automations, you will need to update them to be event automations using the `zoom_automation_webhook` event. The latest update will not work properly without this change.**
+2020-08-30 **BREAKING CHANGE: The `sensor` entity is no longer available. All information from the `sensor` entity has now been collapsed into the `binary_sensor` entity.**
 
 {% endif %}
 
@@ -18,9 +18,9 @@
 
 {% if installed %}
 
-2020-08-26 - **BREAKING CHANGE: If you have previously setup this automation, the options required in your configuration have changed. Remove the existing configuration and update your configuration as defined in step 2 of the Installation>Configuring HomeAssistant section below. Note that the `Event notification endpoint URL` in step 11 of the `Installation>Set up your Zoom app` has changed as well and will need to be updated.**
+2020-08-30 **BREAKING CHANGE: The component has been renamed from `zoom_automation` to `zoom`. You will need to update the Zoom callback URL from step 11 of `Installation>Set up your Zoom app` from `<BASE_HA_URL>/api/zoom_automation` to `<BASE_HA_URL>/api/zoom`. In addition, any automations you've created on the webhook event have to use the `zoom_webhook` event instead of `zoom_automation_webhook`.**
 
-2020-08-26 - **BREAKING CHANGE: If you have previously created webhook automations, you will need to update them to be event automations using the `zoom_automation_webhook` event. The latest update will not work properly without this change.**
+2020-08-30 **BREAKING CHANGE: The `sensor` entity is no longer available. All information from the `sensor` entity has now been collapsed into the `binary_sensor` entity.**
 
 {% endif %}
 
@@ -50,12 +50,13 @@ Your Home Assistant instance must be externally accessible from the Internet.
 
 <details><summary>Sensors Provided</summary>
 
-You will get two sensors out of the box:
+You will get a binary sensor out of the box:
 
-| sensor type 	| sensor name 	| purpose 	| notes 	|
-|-	|-	|-	|-	|
-| binary_sensor 	| binary_sensor.zoom_{PROVIDED_ACCOUNT_NAME} 	| Tracks user presence on a Zoom call by consuming the `User's presence status has been updated` event. If ON, the user is on a Zoom call. 	| If `User's presence status has been updated` is not enabled in the Zoom App's Event Subscriptions, this sensor will not work and can be disabled. 	|
-| sensor 	| sensor.zoom_{PROVIDED_ACCOUNT_NAME}_user_profile 	| Gives user details about the account, including `id`, `email`, and `account_id` 	| The primary purpose of this sensor is to make it easier to create custom automations when tracking multiple Zoom accounts as you will need to add conditions on user profile data to determine which account the event is for. If you are only using a single account, or if you have already recorded this information, you can disable this sensor. 	|
+|  | Description |
+|-|-|
+| Name | `binary_sensor.zoom_{PROVIDED_ACCOUNT_NAME}` |
+| Purpose | Tracks user presence on a Zoom call by consuming the  `User's presence status has been updated`  event. If ON, the user is on a Zoom call. |
+| Notes | If  `User's presence status has been updated`  is not enabled in the Zoom App's Event Subscriptions, this sensor will not work and can be disabled. |
 
 </details>
 
@@ -73,10 +74,10 @@ You will get two sensors out of the box:
 8. Make note of the `Verification Token` on the `Feature` page as you will need it for your configuration later.
 9. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
 10. Enter a name for this subscription (does not matter).
-11. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/zoom_automation`.
+11. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/zoom`.
 12. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. To use the `binary_sensor` provided by the integration, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`. If you want to get more details about when you start a meeting, add `Start Meeting` under `Meeting`.
 13. Once you are done, click `Done`, then `Save` the subscription before hitting `Continue`.
-14. The `Scopes` section should already be updated to the permissions the app would need for the events you selected earlier. Click `Continue`.
+14. The `Scopes` section should have already be updated to include at least one permission based on the events you choose to monitor. If you want to use the `binary_sensor`, you will need to add another scope. Click `Add Scopes` in the top right of the main page, go to the `Chat` section, and enable the checkbox next to `View current user's chat contact information` (the scope is called `chat_contact:read`) and click `Done`. Click `Continue` to save what you did.
 15. You are now ready to configure Home Assistant!
 
 ### Configure HomeAssistant
@@ -95,7 +96,7 @@ You can either do the initial setup through the UI or in your `configuration.yam
 1. Click Install
 2. Create a new top level configuration item in `configuration.yaml` as follows (you may need to restart your HA instance to pick up the changes once they are added):
 ```yaml
-zoom_automation:
+zoom:
     client_id: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
     client_secret: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
     verification_token: <VERIFICATION_TOKEN_FROM_THE_FEATURE_PAGE_OF_YOUR_CUSTOM_ZOOM_APP>
@@ -120,14 +121,14 @@ In some cases, you may want to receive events for more than one Zoom account.
 
 You can add the Zoom integration as many times as you would like with a single `client_id`/`client_secret` configured by going back to the Integrations UI and adding `Zoom` again. As long as you log off Zoom after each time, you will be able to connect your app to each account you want to monitor.
 
-Events from all of the linked accounts will all be sent using the same event, so in order to create sensible automations, you will need to be able to distinguish between accounts. The integration will add a new sensor for each account that gets linked called `sensor.zoom_{LOWERCASE_NAME_WITH_UNDERSCORES_INSTEAD_OF_SPACES}_user_profile` which contains profile information about the account. You can use the `id`, `email`, or `account_id` attributes of the sensor to identify events coming from the account. The information you need from the webhook event to match to the correct account will be in different places depending on the event type. In addition, you should lowercase both the property from the event and the sensor data to ensure a match. In testing I found that Zoom sends a lowercase `id`, so it just seems like the safer approach.
+Events from all of the linked accounts will all be sent using the same event, so in order to create sensible automations, you will need to be able to distinguish between accounts. The `binary_sensor` created for each account you link to will have all of the profile information you need. You can use the `id`, `email`, or `account_id` attributes of the sensor to identify events coming from the account. The information you need from the webhook event to match to the correct account will be in different places depending on the event type. In addition, you should lowercase both the property from the event and the sensor data to ensure a match. In testing I found that Zoom sends a lowercase `id`, so it just seems like the safer approach.
 
 ### Example
 For the `user.presence_status_updated` event, a `user_id` is provided by `trigger.event.data.payload.object.id`. I can match that to the id of the entry for `Hello Worlds` as follows :
 ```yaml
 condition:
   condition: template
-  value_template: '{{ trigger.event.data.payload.object.id.lower() == state_attr('sensor.zoom_hello_world_user_profile', 'id').lower() }}'
+  value_template: '{{ trigger.event.data.payload.object.id.lower() == state_attr('binary_sensor.zoom_hello_world', 'id').lower() }}'
 ```
 
 ## Creating Automations
@@ -140,7 +141,7 @@ Your trigger configuration should be as follows:
 ```yaml
 trigger:
     platform: event
-    event_type: zoom_automation_webhook
+    event_type: zoom_webhook
     event_data:
         event: <ZOOM_EVENT_NAME>
 ```
@@ -167,7 +168,7 @@ You can use some `input_text`s with an automation too, like this:
   description: ''
   trigger:
   - platform: event
-    event_type: zoom_automation_webhook
+    event_type: zoom_webhook
   condition: []
   action:
   - choose:
