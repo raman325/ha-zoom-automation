@@ -192,10 +192,10 @@ class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(hours=1),
             update_method=self._async_update_data,
         )
-        self._api = ZoomAPI
+        self._api = api
         self._contact_types = contact_types
 
-    async def _async_update_data(self) -> Dict[str, Any]:
+    async def _async_update_data(self) -> List[Dict[str, str]]:
         """Update data via library."""
         try:
             contacts = []

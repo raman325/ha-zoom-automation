@@ -1,5 +1,5 @@
 """API for Zoom Automation bound to Home Assistant OAuth."""
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -26,7 +26,7 @@ class ZoomAPI:
         )
         return await resp.json()
 
-    async def async_get_contact_user_profile(self, id: str) -> str:
+    async def async_get_contact_user_profile(self, id: Optional[str]) -> Dict[str, str]:
         """Get presence status for user with given ID."""
         resp = await self._oauth_session.async_request(
             "get",

@@ -37,7 +37,6 @@ class OAuth2FlowHandler(
     def __init__(self) -> None:
         """Intantiate config flow."""
         self._name: str = ""
-        self._picked_name: bool = False
         self._stored_data = {}
         super().__init__()
 
@@ -89,12 +88,11 @@ class OAuth2FlowHandler(
         )
         self._abort_if_unique_id_configured()
 
-        self._picked_name = True
         return await self.async_oauth_create_entry()
 
     async def async_oauth_create_entry(self, data: Dict[str, Any] = None) -> Dict[str, Any]:
         """Create an entry for the flow."""
-        if not self._picked_name:
+        if not self._name:
             self._stored_data = data.copy()
             return await self.async_step_choose_name()
 

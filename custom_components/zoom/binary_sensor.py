@@ -1,5 +1,4 @@
 """Sensor platform for Zoom."""
-import asyncio
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
@@ -63,7 +62,7 @@ class ZoomBaseBinarySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
         """Get user profile."""
         raise NotImplemented
 
-    def _set_state(self, zoom_event_state: str) -> None:
+    def _set_state(self, zoom_event_state: Optional[str]) -> None:
         """Set Zoom and HA state."""
         self._zoom_event_state = zoom_event_state
         self._state = (
@@ -201,7 +200,7 @@ class ZoomContactUserBinarySensor(ZoomBaseBinarySensor):
 
     async def async_update(self) -> None:
         """Update state of entity."""
-        self._profile = await self._api.async_get_contact_user_profile(id)
+        self._profile = await self._api.async_get_contact_user_profile(self._id)
         self._zoom_event_state = self._profile["presence_status"]
 
     def _get_id(self) -> Optional[str]:
