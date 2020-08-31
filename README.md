@@ -76,7 +76,7 @@ You will get two sensors out of the box:
 11. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/zoom_automation`.
 12. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. To use the `binary_sensor` provided by the integration, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`. If you want to get more details about when you start a meeting, add `Start Meeting` under `Meeting`.
 13. Once you are done, click `Done`, then `Save` the subscription before hitting `Continue`.
-14. The `Scopes` section should already be updated to the permissions the app would need for the events you selected earlier. Click `Continue`.
+14. The `Scopes` section should have already be updated to include at least one permission based on the events you choose to monitor. If you want to use the `binary_sensor`, you will need to add another scope. Click `Add Scopes` in the top right of the main page, go to the `Chat` section, and enable the checkbox next to `View current user's chat contact information` (the scope is called `chat_contact:read`) and click `Done`. Click `Continue` to save what you did.
 15. You are now ready to configure Home Assistant!
 
 ### Configure HomeAssistant
