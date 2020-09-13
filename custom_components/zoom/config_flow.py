@@ -46,27 +46,27 @@ class OAuth2FlowHandler(
         """Handle a flow start."""
         assert self.hass
 
-        if user_input is None:
-            return (
-                self.async_show_form(step_id="user", data_schema=ZOOM_SCHEMA)
-                if not await config_entry_oauth2_flow.async_get_implementations(
-                    self.hass, self.DOMAIN
-                )
-                else await self.async_step_pick_implementation()
+        if (
+            user_input is None
+            and not await config_entry_oauth2_flow.async_get_implementations(
+                self.hass, self.DOMAIN
             )
+        ):
+            return self.async_show_form(step_id="user", data_schema=ZOOM_SCHEMA)
 
-        self.async_register_implementation(
-            self.hass,
-            ZoomOAuth2Implementation(
+        if user_input:
+            self.async_register_implementation(
                 self.hass,
-                DOMAIN,
-                user_input[CONF_CLIENT_ID],
-                user_input[CONF_CLIENT_SECRET],
-                OAUTH2_AUTHORIZE,
-                OAUTH2_TOKEN,
-                user_input[CONF_VERIFICATION_TOKEN],
-            ),
-        )
+                ZoomOAuth2Implementation(
+                    self.hass,
+                    DOMAIN,
+                    user_input[CONF_CLIENT_ID],
+                    user_input[CONF_CLIENT_SECRET],
+                    OAUTH2_AUTHORIZE,
+                    OAUTH2_TOKEN,
+                    user_input[CONF_VERIFICATION_TOKEN],
+                ),
+            )
 
         return await self.async_step_pick_implementation()
 
@@ -90,7 +90,9 @@ class OAuth2FlowHandler(
 
         return await self.async_oauth_create_entry()
 
-    async def async_oauth_create_entry(self, data: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def async_oauth_create_entry(
+        self, data: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Create an entry for the flow."""
         if not self._name:
             self._stored_data = data.copy()
