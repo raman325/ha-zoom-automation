@@ -198,14 +198,6 @@ class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> List[Dict[str, str]]:
         """Update data via library."""
         try:
-            contacts = []
-            for contact_type in self._contact_types:
-                new_contacts = await self._api.async_get_all_contacts(contact_type)
-
-                for contact in new_contacts:
-                    contact["contact_type"] = contact_type
-                contacts.extend(new_contacts)
-
-            return contacts
+            return await self._api.async_get_contacts(self._contact_types)
         except:
             raise UpdateFailed

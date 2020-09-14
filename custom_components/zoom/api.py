@@ -1,9 +1,13 @@
 """API for Zoom Automation bound to Home Assistant OAuth."""
+import logging
 from typing import Any, Dict, List, Optional
 
+from aiohttp.web import HTTPUnauthorized
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import BASE_URL, CONTACT_LIST_URL, USER_PROFILE_URL
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ZoomAPI:
@@ -36,25 +40,38 @@ class ZoomAPI:
         )
         return await resp.json()
 
-    async def async_get_all_contacts(
-        self, contact_type: str = "external"
+    async def async_get_contacts(
+        self, contact_types: List[str] = ["external"], limit: int = None
     ) -> List[Dict[str, str]]:
         contacts = []
-        next_page_token = ""
 
-        while next_page_token is not None:
-            params = {"type": contact_type}
-            if next_page_token:
-                params["next_page_token"] = next_page_token
-            resp = await self._oauth_session.async_request(
-                "get",
-                f"{BASE_URL}{CONTACT_LIST_URL}",
-                params=params,
-                raise_for_status=True,
-            )
-            resp_json = await resp.json()
-            contacts.extend(resp_json["contacts"])
+        for contact_type in contact_types:
+            next_page_token = None
 
-            next_page_token = resp_json.get("next_page_token")
+            while (next_page_token or next_page_token is None) and (
+                not limit or len(contacts) < limit
+            ):
+                params = {"type": contact_type, "page_size": 50}
+                if next_page_token:
+                    params["next_page_token"] = next_page_token
+                try:
+                    resp = await self._oauth_session.async_request(
+                        "get",
+                        f"{BASE_URL}{CONTACT_LIST_URL}",
+                        params=params,
+                        raise_for_status=True,
+                    )
+                except HTTPUnauthorized:
+                    return []
+
+                resp_json = await resp.json()
+                for item in resp_json["contacts"]:
+                    item.update({"contact_type": contact_type})
+                contacts.extend(resp_json["contacts"])
+
+                next_page_token = resp_json.get("next_page_token")
+
+        if limit:
+            return contacts[:limit]
 
         return contacts

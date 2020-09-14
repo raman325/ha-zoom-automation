@@ -1,7 +1,9 @@
 """Sensor platform for Zoom."""
+from datetime import timedelta
 from logging import getLogger
 from typing import Any, Dict, List, Optional
 
+from aiohttp.web import HTTPUnauthorized
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
@@ -25,14 +27,16 @@ from .const import (
 
 _LOGGER = getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=30)
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up a Zoom presence sensor entry."""
-    async_add_entities(
-        [ZoomAuthenticatedUserBinarySensor(hass, config_entry)], update_before_add=True
-    )
+    entity = ZoomAuthenticatedUserBinarySensor(hass, config_entry)
+    async_add_entities([entity], update_before_add=True)
 
 
 def get_data_from_path(data: Dict[str, Any], path: List[str]) -> Optional[str]:
@@ -110,6 +114,12 @@ class ZoomBaseBinarySensor(RestoreEntity, ZoomBaseEntity, BinarySensorEntity):
             status = contact["presence_status"]
             _LOGGER.debug("Retrieved initial Zoom status: %s", status)
             self._set_state(status)
+        except HTTPUnauthorized:
+            _LOGGER.debug(
+                "User is unauthorized to query presence status, restoring state.",
+                exc_info=True,
+            )
+            await self._restore_state()
         except:
             _LOGGER.warning(
                 "Error retrieving initial zoom status, restoring state.", exc_info=True

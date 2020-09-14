@@ -12,7 +12,9 @@
             },
             "choose_name": {
                 "title": "Create a name for your account",
-                "data": {"name": "Account Name"}
+                "data": {
+                    "name": "Account Name"
+                }
             }
         },
         "abort": {
@@ -20,6 +22,8 @@
             "missing_configuration": "The component is not configured. Please follow the documentation.",
             "authorize_url_timeout": "Timeout generating authorize URL."
         },
-        "create_entry": {"default": "Successfully authenticated"}
+        "create_entry": {
+            "default": "Successfully authenticated"
+        }
     }
 }

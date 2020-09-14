@@ -14,7 +14,7 @@ from .common import (
     ZoomUserProfileDataUpdateCoordinator,
     ZoomWebhookRequestView,
 )
-from .config_flow import OAuth2FlowHandler
+from .config_flow import ZoomOAuth2FlowHandler
 from .const import (
     API,
     CONF_VERIFICATION_TOKEN,
@@ -39,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
     if DOMAIN not in config:
         return True
 
-    OAuth2FlowHandler.async_register_implementation(
+    ZoomOAuth2FlowHandler.async_register_implementation(
         hass,
         ZoomOAuth2Implementation(
             hass,
@@ -58,7 +58,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Zoom from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(entry.entry_id, {})
     try:
         implementation = (
             await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -75,12 +75,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             OAUTH2_TOKEN,
             entry.data[CONF_VERIFICATION_TOKEN],
         )
-        OAuth2FlowHandler.async_register_implementation(hass, implementation)
+        ZoomOAuth2FlowHandler.async_register_implementation(hass, implementation)
 
     api = ZoomAPI(config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation))
     coordinator = ZoomUserProfileDataUpdateCoordinator(hass, api)
     await coordinator.async_refresh()
-    hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[DOMAIN][entry.entry_id][USER_PROFILE_COORDINATOR] = coordinator
     hass.data[DOMAIN][entry.entry_id][API] = api
 
