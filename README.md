@@ -28,7 +28,7 @@ Because the event name is included in the JSON payload sent to the webhook, you 
 
 ## Pre-Requisites
 
-Your Home Assistant instance must be externally accessible from the Internet.
+Your Home Assistant instance must be externally accessible from the Internet. The `External URL` will also need to be appropriately set and should replace `<BASE_HA_URL>` references in the installation instructions. You can do this in your `configuration.yaml` or through the UI as mention [in the docs](https://www.home-assistant.io/docs/configuration/basic/).
 
 ## Installation
 
