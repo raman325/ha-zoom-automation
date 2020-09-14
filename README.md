@@ -39,7 +39,7 @@ You will get a binary sensor out of the box:
 |  | Description |
 |-|-|
 | Name | `binary_sensor.zoom_{PROVIDED_ACCOUNT_NAME}` |
-| Purpose | Tracks user presence on a Zoom call by consuming the  `User's presence status has been updated`  event. If ON, the user is on a Zoom call. |
+| Purpose | Tracks user presence on a Zoom call by consuming the  `User's presence status has been updated`  event. If the state is `on`, the user is on a Zoom call. |
 | Notes | If  `User's presence status has been updated`  is not enabled in the Zoom App's Event Subscriptions, this sensor will not work and can be disabled. |
 
 </details>
@@ -105,9 +105,14 @@ In some cases, you may want to receive events for more than one Zoom account.
 
 You can add the Zoom integration as many times as you would like with a single `client_id`/`client_secret` configured by going back to the Integrations UI and adding `Zoom` again. As long as you log off Zoom after each time, you will be able to connect your app to each account you want to monitor.
 
+If you are only interested in presence tracking, each account will have a `binary_sensor` whose state is `on` if that person is on a Zoom call or has a scheduled meeting, and `off` if that person is not.
+
+### Monitoring custom events (non-presence related)
+
 Events from all of the linked accounts will all be sent using the same event, so in order to create sensible automations, you will need to be able to distinguish between accounts. The `binary_sensor` created for each account you link to will have all of the profile information you need. You can use the `id`, `email`, or `account_id` attributes of the sensor to identify events coming from the account. The information you need from the webhook event to match to the correct account will be in different places depending on the event type. In addition, you should lowercase both the property from the event and the sensor data to ensure a match. In testing I found that Zoom sends a lowercase `id`, so it just seems like the safer approach.
 
-### Example
+#### Example
+
 For the `user.presence_status_updated` event, a `user_id` is provided by `trigger.event.data.payload.object.id`. I can match that to the id of the entry for `Hello Worlds` as follows :
 ```yaml
 condition:
