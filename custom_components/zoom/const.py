@@ -1,6 +1,6 @@
 """Constants for the Zoom integration."""
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.config_validation import string
 import voluptuous as vol
 
 API = "api"
@@ -44,5 +44,5 @@ CONNECTIVITY_STATUS_ON = "Do_Not_Disturb"
 HA_ZOOM_EVENT = f"{DOMAIN}_webhook"
 
 WEBHOOK_RESPONSE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_EVENT): cv.string, vol.Required(ATTR_PAYLOAD): dict}
+    {vol.Required(ATTR_EVENT): string, vol.Required(ATTR_PAYLOAD): dict}
 )

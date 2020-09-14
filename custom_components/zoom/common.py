@@ -77,7 +77,6 @@ class ZoomBaseEntity(Entity):
         ][USER_PROFILE_COORDINATOR]
         self._api: ZoomAPI = hass.data[DOMAIN][config_entry.entry_id][API]
         self._name: str = config_entry.data[CONF_NAME]
-        self._async_unsub_listeners = []
 
     async def async_update(self) -> None:
         """Request coordinator update."""
@@ -92,18 +91,7 @@ class ZoomBaseEntity(Entity):
             """Update profile."""
             self.async_write_ha_state()
 
-        self._async_unsub_listeners.append(
-            self._coordinator.async_add_listener(profile_update)
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect callbacks when entity is removed."""
-        await super().async_will_remove_from_hass()
-
-        for listener in self._async_unsub_listeners:
-            listener()
-
-        self._async_unsub_listeners.clear()
+        self.async_on_remove(self._coordinator.async_add_listener(profile_update))
 
     @property
     def unique_id(self) -> str:

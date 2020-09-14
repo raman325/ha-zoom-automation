@@ -11,7 +11,6 @@ import voluptuous as vol
 from .common import ZoomOAuth2Implementation
 from .const import (
     CONF_VERIFICATION_TOKEN,
-    DEFAULT_NAME,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
@@ -77,9 +76,7 @@ class ZoomOAuth2FlowHandler(
         if not user_input:
             return self.async_show_form(
                 step_id="choose_name",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_NAME, default=DEFAULT_NAME): vol.Coerce(str)}
-                ),
+                data_schema=vol.Schema({vol.Required(CONF_NAME): vol.Coerce(str)}),
             )
 
         self._name = user_input[CONF_NAME]
