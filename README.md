@@ -1,11 +1,3 @@
-{% if installed %}
-
-2020-08-30 **BREAKING CHANGE: The component has been renamed from `zoom_automation` to `zoom`. You will need to update the Zoom callback URL from step 11 of `Installation>Set up your Zoom app` from `<BASE_HA_URL>/api/zoom_automation` to `<BASE_HA_URL>/api/zoom`. In addition, any automations you've created on the webhook event have to use the `zoom_webhook` event instead of `zoom_automation_webhook`. You may also want to remove the `Zoom` integration from your Integrations list, uninstall it from HACS, restart HA, and then reinstall it.**
-
-2020-08-30 **BREAKING CHANGE: The `sensor` entity is no longer available. All information from the `sensor` entity has now been collapsed into the `binary_sensor` entity.**
-
-{% endif %}
-
 [![Last Commit][last-commit-shield]][commits]
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
@@ -15,14 +7,6 @@
 
 [![Discord][discord-shield]][discord]
 [![Community Forum][forum-shield]][forum]
-
-{% if installed %}
-
-2020-08-30 **BREAKING CHANGE: The component has been renamed from `zoom_automation` to `zoom`. You will need to update the Zoom callback URL from step 11 of `Installation>Set up your Zoom app` from `<BASE_HA_URL>/api/zoom_automation` to `<BASE_HA_URL>/api/zoom`. In addition, any automations you've created on the webhook event have to use the `zoom_webhook` event instead of `zoom_automation_webhook`. You may also want to remove the `Zoom` integration from your Integrations list, uninstall it from HACS, restart HA, and then reinstall it.**
-
-2020-08-30 **BREAKING CHANGE: The `sensor` entity is no longer available. All information from the `sensor` entity has now been collapsed into the `binary_sensor` entity.**
-
-{% endif %}
 
 _Component to help create automations for events that occur in your [Zoom][zoom] account._
 
