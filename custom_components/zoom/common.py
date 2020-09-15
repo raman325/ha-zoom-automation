@@ -29,6 +29,19 @@ from .const import (
 _LOGGER = getLogger(__name__)
 
 
+def get_contact_name(contact: dict) -> str:
+    """Determine contact name from available first name, last naame, and email."""
+    contact_name = ""
+    if contact["first_name"]:
+        contact_name = f"{contact['first_name']} "
+    if contact["last_name"]:
+        contact_name += f"{contact['last_name']} "
+
+    if contact_name:
+        return f"{contact_name}({contact['email']})"
+    return contact["email"]
+
+
 class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """Oauth2 implementation that only uses the external url."""
 

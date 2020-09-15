@@ -14,7 +14,7 @@ from homeassistant.core import Event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .common import ZoomBaseEntity
+from .common import ZoomBaseEntity, get_contact_name
 from .const import (
     ATTR_EVENT,
     CONNECTIVITY_EVENT,
@@ -209,7 +209,7 @@ class ZoomAuthenticatedUserBinarySensor(RestoreEntity, ZoomBaseBinarySensor):
     @property
     def name(self) -> str:
         """Entity name."""
-        return f"Zoom {self._name}"
+        return f"Zoom - {self._name}"
 
 
 class ZoomContactUserBinarySensor(ZoomBaseBinarySensor):
@@ -240,7 +240,7 @@ class ZoomContactUserBinarySensor(ZoomBaseBinarySensor):
     @property
     def name(self) -> str:
         """Entity name."""
-        return f"Zoom {self._name} Contact {self.first_name} {self.last_name} ({self.email})"
+        return f"Zoom - {self._name}'s Contact - {get_contact_name(self._profile)}"  # type: ignore
 
     @property
     def should_poll(self) -> bool:
