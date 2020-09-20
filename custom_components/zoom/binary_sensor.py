@@ -9,19 +9,23 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import Event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import slugify
 
-from .common import ZoomBaseEntity, get_contact_name
+from .common import ZoomAPI, ZoomUserProfileDataUpdateCoordinator, get_contact_name
 from .const import (
+    API,
     ATTR_EVENT,
     CONNECTIVITY_EVENT,
     CONNECTIVITY_ID,
     CONNECTIVITY_STATUS,
     CONNECTIVITY_STATUS_ON,
+    DOMAIN,
     HA_ZOOM_EVENT,
+    USER_PROFILE_COORDINATOR,
 )
 
 _LOGGER = getLogger(__name__)
@@ -48,18 +52,41 @@ def get_data_from_path(data: Dict[str, Any], path: List[str]) -> Optional[str]:
     return None
 
 
-class ZoomBaseBinarySensor(ZoomBaseEntity, BinarySensorEntity):
+class ZoomBaseBinarySensor(BinarySensorEntity):
     """Base class for Zoom binary_sensor."""
 
     def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
         """Initialize base sensor."""
-        super().__init__(hass, config_entry)
+        self._config_entry = config_entry
+        self._hass = hass
+        self._coordinator: ZoomUserProfileDataUpdateCoordinator = hass.data[DOMAIN][
+            config_entry.entry_id
+        ][USER_PROFILE_COORDINATOR]
+        self._api: ZoomAPI = hass.data[DOMAIN][config_entry.entry_id][API]
+        self._name: str = config_entry.data[CONF_NAME]
+        self._profile = None
         self._zoom_event_state = None
         self._state = STATE_OFF
+        self._should_poll = True
 
-    def _get_user_profile(self) -> Optional[Dict[str, str]]:
-        """Get user profile."""
-        raise NotImplemented
+    async def async_update(self) -> None:
+        """Update state of entity."""
+        try:
+            self._profile = await self._api.async_get_contact_user_profile(self.id)
+            self._set_state(self._profile["presence_status"])
+        except HTTPUnauthorized:
+            _LOGGER.warning(
+                "Unable to poll presence status for user %s. Relying solely on webhooks.",
+                self.profile["email"],
+            )
+            self._should_poll = False
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks when entity is added."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     def _set_state(self, zoom_event_state: Optional[str]) -> None:
         """Set Zoom and HA state."""
@@ -102,29 +129,34 @@ class ZoomBaseBinarySensor(ZoomBaseEntity, BinarySensorEntity):
         return DEVICE_CLASS_CONNECTIVITY
 
     @property
+    def profile(self) -> Optional[Dict[str, str]]:
+        """Get user profile."""
+        return self._profile
+
+    @property
     def first_name(self) -> Optional[str]:
         """Return the first name."""
-        return self._get_user_profile().get("first_name")
+        return self.profile.get("first_name")
 
     @property
     def last_name(self) -> Optional[str]:
         """Return the last name."""
-        return self._get_user_profile().get("last_name")
+        return self.profile.get("last_name")
 
     @property
     def id(self) -> Optional[str]:
         """Return the id."""
-        return None
+        self.profile.get("id")
 
     @property
     def email(self) -> Optional[str]:
         """Return the email."""
-        return self._get_user_profile().get("email")
+        return self.profile.get("email")
 
     @property
     def account_id(self) -> Optional[str]:
         """Return the account_id."""
-        return self._get_user_profile().get("account_id")
+        return self.profile.get("account_id")
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
@@ -140,6 +172,21 @@ class ZoomBaseBinarySensor(ZoomBaseEntity, BinarySensorEntity):
             data["status"] = self._zoom_event_state
 
         return data if data else None
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique_id for entity."""
+        return f"{DOMAIN}_{slugify(self._name)}"
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return True
+
+    @property
+    def should_poll(self) -> bool:
+        """Should entity be polled."""
+        return self._should_poll
 
 
 class ZoomAuthenticatedUserBinarySensor(RestoreEntity, ZoomBaseBinarySensor):
@@ -192,19 +239,15 @@ class ZoomAuthenticatedUserBinarySensor(RestoreEntity, ZoomBaseBinarySensor):
             )
             await self._restore_state()
 
-    def _get_user_profile(self) -> Optional[Dict[str, str]]:
-        """Get user profile."""
-        return self._coordinator.data
-
     @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return True
 
     @property
-    def id(self) -> Optional[str]:
-        """Get user ID."""
-        return self._coordinator.data.get("id", "")
+    def profile(self) -> Optional[Dict[str, str]]:
+        """Get user profile."""
+        return self.profile or self._coordinator.data
 
     @property
     def name(self) -> str:
@@ -221,16 +264,6 @@ class ZoomContactUserBinarySensor(ZoomBaseBinarySensor):
         """Initialize entity."""
         super().__init__(hass, config_entry)
         self._id = id
-        self._profile = None
-
-    async def async_update(self) -> None:
-        """Update state of entity."""
-        self._profile = await self._api.async_get_contact_user_profile(self._id)
-        self._set_state(self._profile["presence_status"])
-
-    def _get_user_profile(self) -> Optional[Dict[str, str]]:
-        """Get user profile."""
-        return self._profile
 
     @property
     def id(self) -> Optional[str]:
@@ -240,14 +273,14 @@ class ZoomContactUserBinarySensor(ZoomBaseBinarySensor):
     @property
     def name(self) -> str:
         """Entity name."""
-        return f"Zoom - {self._name}'s Contact - {get_contact_name(self._profile)}"  # type: ignore
-
-    @property
-    def should_poll(self) -> bool:
-        """Should entity be polled."""
-        return True
+        return f"Zoom - {self._name}'s Contact - {get_contact_name(self.profile)}"  # type: ignore
 
     @property
     def unique_id(self) -> str:
         """Return unique_id for entity."""
         return f"{super().unique_id}_{self.id}"
+
+    @property
+    def should_poll(self) -> bool:
+        """Should entity be polled."""
+        return True
