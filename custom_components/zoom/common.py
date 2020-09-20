@@ -6,25 +6,14 @@ from typing import Any, Dict, List
 
 from aiohttp.web import Request, Response
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, HTTP_OK
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import HTTP_OK
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import slugify
 
 from .api import ZoomAPI
-from .const import (
-    API,
-    DEFAULT_NAME,
-    DOMAIN,
-    HA_URL,
-    HA_ZOOM_EVENT,
-    USER_PROFILE_COORDINATOR,
-    WEBHOOK_RESPONSE_SCHEMA,
-)
+from .const import DEFAULT_NAME, DOMAIN, HA_URL, HA_ZOOM_EVENT, WEBHOOK_RESPONSE_SCHEMA
 
 _LOGGER = getLogger(__name__)
 
@@ -76,45 +65,6 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         """Return the redirect uri."""
         url = get_url(self.hass, allow_internal=False, prefer_cloud=True)
         return f"{url}{config_entry_oauth2_flow.AUTH_CALLBACK_PATH}"
-
-
-class ZoomBaseEntity(Entity):
-    """Base class for a Zoom automation entity."""
-
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-        """Initialize class."""
-        self._config_entry = config_entry
-        self._hass = hass
-        self._coordinator: ZoomUserProfileDataUpdateCoordinator = hass.data[DOMAIN][
-            config_entry.entry_id
-        ][USER_PROFILE_COORDINATOR]
-        self._api: ZoomAPI = hass.data[DOMAIN][config_entry.entry_id][API]
-        self._name: str = config_entry.data[CONF_NAME]
-
-    async def async_update(self) -> None:
-        """Request coordinator update."""
-        await self._coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks when entity is added."""
-        await super().async_added_to_hass()
-
-        @callback
-        def profile_update():
-            """Update profile."""
-            self.async_write_ha_state()
-
-        self.async_on_remove(self._coordinator.async_add_listener(profile_update))
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique_id for entity."""
-        return f"{DOMAIN}_{slugify(self._name)}"
-
-    @property
-    def should_poll(self) -> bool:
-        """Should entity be polled."""
-        return False
 
 
 class ZoomWebhookRequestView(HomeAssistantView):
