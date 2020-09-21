@@ -247,7 +247,7 @@ class ZoomAuthenticatedUserBinarySensor(RestoreEntity, ZoomBaseBinarySensor):
     @property
     def profile(self) -> Optional[Dict[str, str]]:
         """Get user profile."""
-        return self.profile or self._coordinator.data
+        return self._profile or self._coordinator.data
 
     @property
     def name(self) -> str:
