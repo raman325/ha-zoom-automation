@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import Event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -52,7 +52,7 @@ def get_data_from_path(data: Dict[str, Any], path: List[str]) -> Optional[str]:
     return None
 
 
-class ZoomBaseBinarySensor(BinarySensorEntity):
+class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
     """Base class for Zoom binary_sensor."""
 
     def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
@@ -82,12 +82,44 @@ class ZoomBaseBinarySensor(BinarySensorEntity):
                 )
                 self._should_poll = False
 
+    async def _restore_state(self) -> None:
+        """Restore state from last known state."""
+        restored_state = await self.async_get_last_state()
+        if restored_state:
+            self._state = restored_state.state
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
         await super().async_added_to_hass()
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
+
+        if not self.id:
+            _LOGGER.debug("ID not found, restoring state.")
+            await self._restore_state()
+
+        if self.id:
+            try:
+                contact = await self._api.async_get_contact_user_profile(self.id)
+                status = contact["presence_status"]
+                _LOGGER.debug("Retrieved initial Zoom status: %s", status)
+                self._set_state(status)
+                self.async_write_ha_state()
+            except HTTPUnauthorized:
+                _LOGGER.debug(
+                    "User is unauthorized to query presence status, restoring state.",
+                    exc_info=True,
+                )
+                await self._restore_state()
+            except:
+                _LOGGER.warning(
+                    "Error retrieving initial zoom status, restoring state.", exc_info=True
+                )
+                await self._restore_state()
+        else:
+            _LOGGER.debug("ID is unknown, restoring state.")
+            await self._restore_state()
 
     def _set_state(self, zoom_event_state: Optional[str]) -> None:
         """Set Zoom and HA state."""
@@ -147,7 +179,7 @@ class ZoomBaseBinarySensor(BinarySensorEntity):
     @property
     def id(self) -> Optional[str]:
         """Return the id."""
-        self.profile.get("id")
+        self._config_entry.data.get(CONF_ID) or self.profile.get("id")
 
     @property
     def email(self) -> Optional[str]:
@@ -190,7 +222,7 @@ class ZoomBaseBinarySensor(BinarySensorEntity):
         return self._should_poll
 
 
-class ZoomAuthenticatedUserBinarySensor(RestoreEntity, ZoomBaseBinarySensor):
+class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
     """Class for Zoom user profile binary sensor for authenticated user."""
 
     async def async_event_received(self, event: Event) -> None:
@@ -203,12 +235,6 @@ class ZoomAuthenticatedUserBinarySensor(RestoreEntity, ZoomBaseBinarySensor):
             self._set_state(get_data_from_path(event.data, CONNECTIVITY_STATUS))
             self.async_write_ha_state()
 
-    async def _restore_state(self) -> None:
-        """Restore state from last known state."""
-        restored_state = await self.async_get_last_state()
-        if restored_state:
-            self._state = restored_state.state
-
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
         await super().async_added_to_hass()
@@ -217,32 +243,6 @@ class ZoomAuthenticatedUserBinarySensor(RestoreEntity, ZoomBaseBinarySensor):
         self.async_on_remove(
             self.hass.bus.async_listen(HA_ZOOM_EVENT, self.async_event_received)
         )
-
-        if not self.id:
-            _LOGGER.debug("ID not found, restoring state.")
-            await self._restore_state()
-
-        if self.id:
-            try:
-                contact = await self._api.async_get_contact_user_profile(self.id)
-                status = contact["presence_status"]
-                _LOGGER.debug("Retrieved initial Zoom status: %s", status)
-                self._set_state(status)
-                self.async_write_ha_state()
-            except HTTPUnauthorized:
-                _LOGGER.debug(
-                    "User is unauthorized to query presence status, restoring state.",
-                    exc_info=True,
-                )
-                await self._restore_state()
-            except:
-                _LOGGER.warning(
-                    "Error retrieving initial zoom status, restoring state.", exc_info=True
-                )
-                await self._restore_state()
-        else:
-            _LOGGER.debug("ID is unknown, restoring state.")
-            await self._restore_state()
 
     @property
     def assumed_state(self) -> bool:

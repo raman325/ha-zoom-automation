@@ -2,7 +2,7 @@
 from logging import getLogger
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.typing import ConfigType
@@ -82,6 +82,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_refresh()
     hass.data[DOMAIN][entry.entry_id][USER_PROFILE_COORDINATOR] = coordinator
     hass.data[DOMAIN][entry.entry_id][API] = api
+    my_profile = await api.async_get_my_user_profile()
+    new_data = entry.data.copy()
+    new_data[CONF_ID] = my_profile.get("id")
+    hass.config_entries.async_update_entry(entry, data=new_data)
 
     # Register view
     hass.http.register_view(ZoomWebhookRequestView(entry.data[CONF_VERIFICATION_TOKEN]))
