@@ -75,10 +75,12 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
             try:
                 self._profile = await self._api.async_get_contact_user_profile(self.id)
                 self._set_state(self._profile["presence_status"])
-            except Exception:
+                self._should_poll = True
+            except:
                 _LOGGER.warning(
                     "Unable to poll presence status for user %s. Relying solely on webhooks.",
                     self.profile["email"],
+                    exc_info=True
                 )
                 self._should_poll = False
 
@@ -94,10 +96,6 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
-
-        if not self.id:
-            _LOGGER.debug("ID not found, restoring state.")
-            await self._restore_state()
 
         if self.id:
             try:
@@ -179,7 +177,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
     @property
     def id(self) -> Optional[str]:
         """Return the id."""
-        self._config_entry.data.get(CONF_ID) or self.profile.get("id")
+        return self._config_entry.data.get(CONF_ID) or self.profile.get("id")
 
     @property
     def email(self) -> Optional[str]:
