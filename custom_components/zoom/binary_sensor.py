@@ -71,15 +71,16 @@ class ZoomBaseBinarySensor(BinarySensorEntity):
 
     async def async_update(self) -> None:
         """Update state of entity."""
-        try:
-            self._profile = await self._api.async_get_contact_user_profile(self.id)
-            self._set_state(self._profile["presence_status"])
-        except HTTPUnauthorized:
-            _LOGGER.warning(
-                "Unable to poll presence status for user %s. Relying solely on webhooks.",
-                self.profile["email"],
-            )
-            self._should_poll = False
+        if self.id:
+            try:
+                self._profile = await self._api.async_get_contact_user_profile(self.id)
+                self._set_state(self._profile["presence_status"])
+            except HTTPUnauthorized:
+                _LOGGER.warning(
+                    "Unable to poll presence status for user %s. Relying solely on webhooks.",
+                    self.profile["email"],
+                )
+                self._should_poll = False
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
