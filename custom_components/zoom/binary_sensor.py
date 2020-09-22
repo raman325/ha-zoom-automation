@@ -222,28 +222,32 @@ class ZoomAuthenticatedUserBinarySensor(RestoreEntity, ZoomBaseBinarySensor):
             _LOGGER.debug("ID not found, restoring state.")
             await self._restore_state()
 
-        try:
-            contact = await self._api.async_get_contact_user_profile(self.id)
-            status = contact["presence_status"]
-            _LOGGER.debug("Retrieved initial Zoom status: %s", status)
-            self._set_state(status)
-            self.async_write_ha_state()
-        except HTTPUnauthorized:
-            _LOGGER.debug(
-                "User is unauthorized to query presence status, restoring state.",
-                exc_info=True,
-            )
-            await self._restore_state()
-        except:
-            _LOGGER.warning(
-                "Error retrieving initial zoom status, restoring state.", exc_info=True
-            )
+        if self.id:
+            try:
+                contact = await self._api.async_get_contact_user_profile(self.id)
+                status = contact["presence_status"]
+                _LOGGER.debug("Retrieved initial Zoom status: %s", status)
+                self._set_state(status)
+                self.async_write_ha_state()
+            except HTTPUnauthorized:
+                _LOGGER.debug(
+                    "User is unauthorized to query presence status, restoring state.",
+                    exc_info=True,
+                )
+                await self._restore_state()
+            except:
+                _LOGGER.warning(
+                    "Error retrieving initial zoom status, restoring state.", exc_info=True
+                )
+                await self._restore_state()
+        else:
+            _LOGGER.debug("ID is unknown, restoring state.")
             await self._restore_state()
 
     @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
-        return True
+        return not self._profile
 
     @property
     def profile(self) -> Optional[Dict[str, str]]:
