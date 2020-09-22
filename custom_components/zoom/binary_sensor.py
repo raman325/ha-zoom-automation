@@ -75,7 +75,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
             try:
                 self._profile = await self._api.async_get_contact_user_profile(self.id)
                 self._set_state(self._profile["presence_status"])
-            except HTTPUnauthorized:
+            except Exception:
                 _LOGGER.warning(
                     "Unable to poll presence status for user %s. Relying solely on webhooks.",
                     self.profile["email"],
