@@ -116,8 +116,7 @@ Events from all of the linked accounts will all be sent using the same event, so
 For the `user.presence_status_updated` event, a `user_id` is provided by `trigger.event.data.payload.object.id`. I can match that to the id of the entry for `Hello Worlds` as follows :
 ```yaml
 condition:
-  condition: template
-  value_template: '{{ trigger.event.data.payload.object.id.lower() == state_attr('binary_sensor.zoom_hello_world', 'id').lower() }}'
+  - {{ trigger.event.data.payload.object.id.lower() == state_attr('binary_sensor.zoom_hello_world', 'id').lower() }}
 ```
 
 ## Creating Automations
@@ -142,11 +141,10 @@ To see the schema of various events, check Zoom's [Webhook Reference docs](https
 To create a condition on an event type, use something like the following:
 ```yaml
 condition:
-  condition: template
-  value_template: '{{ trigger.event.data.event == "user.presence_status_updated" }}'
+  condition: "{{ trigger.event.data.event == "user.presence_status_updated" }}"
 ```
 
-You will likely want to act on information in `trigger.event.data.payload.object`, either in a `condition` or an `action`. Be sure to use `value_template` and `data_template` when accessing this information in your configured automation.
+You will likely want to act on information in `trigger.event.data.payload.object`, either in a `condition` or an `action`. Be sure to use `value_template` and `data_template` when accessing this information in your configured automation if HA version is below 0.115.0.
 
 You can use some `input_text`s with an automation too, like this:
 
@@ -161,19 +159,15 @@ You can use some `input_text`s with an automation too, like this:
   condition: []
   action:
   - choose:
-    - conditions:
-      - condition: template
-        value_template: '{{ trigger.event.data.event == "user.presence_status_updated" }}'
+    - conditions: "{{ trigger.event.data.event == "user.presence_status_updated" }}"
       sequence:
-      - data_template:
+      - data:
           entity_id: input_text.zoom_status
           value: '{{ trigger.event.data.payload.object.presence_status }}'
         service: input_text.set_value
-    - conditions:
-      - condition: template
-        value_template: '{{ trigger.event.data.event == "meeting.started" }}'
+    - conditions: "{{ trigger.event.data.event == "meeting.started" }}"
       sequence:
-      - data_template:
+      - data:
           entity_id: input_text.zoom_meeting
           value: '{{ trigger.event.data.payload.object.topic }}'
         service: input_text.set_value
