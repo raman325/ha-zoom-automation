@@ -84,8 +84,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id][API] = api
     my_profile = await api.async_get_my_user_profile()
     new_data = entry.data.copy()
-    new_data[CONF_ID] = my_profile.get("id")
-    hass.config_entries.async_update_entry(entry, data=new_data)
+    new_data[CONF_ID] = my_profile.get("id")  # type: ignore
+    hass.config_entries.async_update_entry(entry, data=new_data)  # type: ignore
 
     # Register view
     hass.http.register_view(ZoomWebhookRequestView(entry.data[CONF_VERIFICATION_TOKEN]))
