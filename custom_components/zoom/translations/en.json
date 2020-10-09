@@ -20,7 +20,8 @@
         "abort": {
             "single_instance_allowed": "Already configured. Only a single configuration possible.",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
-            "authorize_url_timeout": "Timeout generating authorize URL."
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "no_external_url": "You do not have an external URL for your Home Assistant instance configured which is needed to set up the Zoom integration. You need to set the `external_url` property in the `homeassistant` section of your `configuration.yaml`, or set the `External URL` property in the Home Assistant `General Configuration` UI, before trying to setup the Zoom integration again. You can learn more about configuring this parameter [here](https://www.home-assistant.io/docs/configuration/basic)"
         },
         "create_entry": {
             "default": "Successfully authenticated"

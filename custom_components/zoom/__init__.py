@@ -1,7 +1,7 @@
 """The Zoom integration."""
 from logging import getLogger
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -13,6 +13,7 @@ from .common import (
     ZoomOAuth2Implementation,
     ZoomUserProfileDataUpdateCoordinator,
     ZoomWebhookRequestView,
+    valid_external_url,
 )
 from .config_flow import ZoomOAuth2FlowHandler
 from .const import (
@@ -39,6 +40,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
     if DOMAIN not in config:
         return True
 
+    if not valid_external_url(hass):
+        return False
+
     ZoomOAuth2FlowHandler.async_register_implementation(
         hass,
         ZoomOAuth2Implementation(
@@ -51,7 +55,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
             config[DOMAIN][CONF_VERIFICATION_TOKEN],
         ),
     )
-    hass.data[DOMAIN][SOURCE_IMPORT] = True
 
     return True
 

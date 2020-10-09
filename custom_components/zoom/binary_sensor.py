@@ -80,7 +80,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
                 _LOGGER.warning(
                     "Unable to poll presence status for user %s. Relying solely on webhooks.",
                     self.profile["email"],
-                    exc_info=True
+                    exc_info=True,
                 )
                 self._should_poll = False
 
@@ -112,7 +112,8 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
                 await self._restore_state()
             except:
                 _LOGGER.warning(
-                    "Error retrieving initial zoom status, restoring state.", exc_info=True
+                    "Error retrieving initial zoom status, restoring state.",
+                    exc_info=True,
                 )
                 await self._restore_state()
         else:

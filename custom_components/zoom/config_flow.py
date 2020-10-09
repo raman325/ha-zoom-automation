@@ -8,7 +8,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
 import voluptuous as vol
 
-from .common import ZoomOAuth2Implementation
+from .common import ZoomOAuth2Implementation, valid_external_url
 from .const import (
     CONF_VERIFICATION_TOKEN,
     DOMAIN,
@@ -44,6 +44,9 @@ class ZoomOAuth2FlowHandler(
     ) -> Dict[str, Any]:
         """Handle a flow start."""
         assert self.hass
+
+        if not valid_external_url(self.hass):
+            return self.async_abort(reason="no_external_url")
 
         if (
             user_input is None

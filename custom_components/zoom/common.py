@@ -9,13 +9,34 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import HTTP_OK
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import ZoomAPI
 from .const import DEFAULT_NAME, DOMAIN, HA_URL, HA_ZOOM_EVENT, WEBHOOK_RESPONSE_SCHEMA
 
 _LOGGER = getLogger(__name__)
+
+
+def valid_external_url(hass: HomeAssistant) -> bool:
+    """Return whether a valid external URL for HA is available."""
+    try:
+        get_url(hass, allow_internal=False, prefer_cloud=True)
+        return True
+    except NoURLAvailableError:
+        _LOGGER.error(
+            (
+                "You do not have an external URL for your Home Assistant instance "
+                "configured which is needed to set up the Zoom integration. "
+                "You need to set the `external_url` property in the "
+                "`homeassistant` section of your `configuration.yaml`, or set the "
+                "`External URL` property in the Home Assistant `General "
+                "Configuration` UI, before trying to setup the Zoom integration "
+                "again. You can learn more about configuring this parameter at "
+                "https://www.home-assistant.io/docs/configuration/basic"
+            )
+        )
+        return False
 
 
 def get_contact_name(contact: dict) -> str:
