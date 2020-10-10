@@ -52,7 +52,7 @@ You will get a binary sensor out of the box:
 2. Click on `Create` in the OAuth card.
 3. Enter an application name of your choice, select `User-managed app`, deselect `Would you like to publish this app on Zoom App Marketplace?`, and then click on `Create`.
 4. Copy your `Client ID` and `Client Secret` somewhere as you will need them later to configure Home Assistant.
-5. Enter the following `Redirect URL for OAuth`: `<BASE_HA_URL>/auth/external/callback` (replace `<BASE_HA_URL>` with the URL you use to access Home Assistant, e.g. `https://ha.example.com`)
+5. Enter the following `Redirect URL for OAuth`: `<BASE_HA_URL>/auth/external/callback` (replace `<BASE_HA_URL>` with the URL you configured inside of Home Assistant as the external URL, e.g. `https://ha.example.com`)
 6. Enter your `<BASE_HA_URL>` in the `Whitelist URL` section, then hit `Continue`.
 7. The `App Name` should already be filled out. A `Short Description` and `Long Description` are required, but since this app is only for you, it doesn't matter what you enter here. You will also need to add a `Name` and `Email Address` in the `Developer Contact Information` section. Click `Continue` once you are done.
 8. Make note of the `Verification Token` on the `Feature` page as you will need it for your configuration later.
