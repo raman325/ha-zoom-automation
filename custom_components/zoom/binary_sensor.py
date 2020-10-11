@@ -77,8 +77,8 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
                 self._set_state(self._profile["presence_status"])
                 self._should_poll = True
             except:
-                _LOGGER.warning(
-                    "Unable to poll presence status for user %s. Relying solely on webhooks.",
+                _LOGGER.info(
+                    "Unable to poll presence status for user %s. May have to rely solely on webhooks.",
                     self.profile["email"],
                     exc_info=True,
                 )
