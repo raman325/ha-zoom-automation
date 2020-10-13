@@ -80,7 +80,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
                 _LOGGER.info(
                     "Unable to poll presence status for user %s (%s). May have to rely solely on webhooks.",
                     self.id,
-                    self.profile.get("email"),
+                    self.email,
                     exc_info=True,
                 )
                 self._should_poll = False
@@ -164,7 +164,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
     @property
     def profile(self) -> Optional[Dict[str, str]]:
         """Get user profile."""
-        return self._profile
+        return self._profile or {}
 
     @property
     def first_name(self) -> Optional[str]:
@@ -252,7 +252,7 @@ class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
     @property
     def profile(self) -> Optional[Dict[str, str]]:
         """Get user profile."""
-        return self._profile or self._coordinator.data
+        return self._profile or self._coordinator.data or {}
 
     @property
     def name(self) -> str:
