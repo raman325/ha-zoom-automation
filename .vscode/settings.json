@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "venv/bin/python3",
+    "python.pythonPath": "/Users/raman.gupta/projects/personal/ha-zoom-automation/venv/bin/python3",
     "files.associations": {
         "*.yaml": "home-assistant"
     }

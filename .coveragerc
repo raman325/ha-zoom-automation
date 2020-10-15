@@ -1,0 +1,5 @@
+[run]
+source = custom_components
+
+omit =
+    custom_components/zoom/api.py
