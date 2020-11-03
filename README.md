@@ -64,6 +64,10 @@ You will get a binary sensor out of the box:
 14. The `Scopes` section should have already be updated to include at least one permission based on the events you choose to monitor. If you want to use the `binary_sensor`, you will need to add another scope so that the initial status of your sensor is set correctly, otherwise the integration will naively restore your last state on restart. To do this, click `Add Scopes` in the top right of the main page, go to the `Chat` section, enable the checkbox next to `View current user's chat contact information` (the scope is called `chat_contact:read`) and click `Done`. Click `Continue` to save what you did.
 15. You are now ready to configure Home Assistant!
 
+### Install the Zoom integration via HACS
+
+If you don't already have HACS installed, follow the [instructions here](https://hacs.xyz/docs/installation/manual). Once HACS has been installed, go the HACS menu in your sidebar menu, go to Integrations, and click Add. Search for Zoom and select `INSTALL THIS REPOSITORY IN HACS`. You may need to restart your Home Assistant instance in order for it to be able to see the new integration. You may also need to hard refresh the UI in order to see the Integration in the main Integrations menu.
+
 ### Configure HomeAssistant
 
 You can either do the initial setup through the UI or in your `configuration.yaml` file. Both methods are described below.
