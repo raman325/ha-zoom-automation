@@ -70,7 +70,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         self._state = STATE_OFF
         self._available = True
 
-    async def _async_update(self) -> None:
+    async def _async_update(self, now) -> None:
         """Update state of entity."""
         if self.id:
             try:
@@ -96,9 +96,11 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
         await super().async_added_to_hass()
+
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
+
         self.async_on_remove(
             async_track_time_interval(
                 self._hass, self._async_update, timedelta(seconds=30)
