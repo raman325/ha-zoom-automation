@@ -83,7 +83,9 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
                     self.async_write_ha_state()
             except:
                 # If API call fails we can assume we can't talk to Zoom
-                self._available = False
+                if self._available:
+                    self._available = False
+                    self.async_write_ha_state()
 
     async def _restore_state(self) -> None:
         """Restore state from last known state."""
