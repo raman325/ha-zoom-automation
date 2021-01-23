@@ -223,7 +223,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self._available
+        return True
 
     @property
     def should_poll(self) -> bool:
