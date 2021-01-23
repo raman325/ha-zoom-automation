@@ -22,7 +22,7 @@ from .const import (
     CONNECTIVITY_EVENT,
     CONNECTIVITY_ID,
     CONNECTIVITY_STATUS,
-    CONNECTIVITY_STATUS_ON,
+    CONNECTIVITY_STATUS_OFF,
     DOMAIN,
     HA_ZOOM_EVENT,
     USER_PROFILE_COORDINATOR,
@@ -67,23 +67,21 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         self._profile = None
         self._zoom_event_state = None
         self._state = STATE_OFF
-        self._should_poll = True
+        self._available = True
 
     async def async_update(self) -> None:
         """Update state of entity."""
         if self.id:
             try:
                 self._profile = await self._api.async_get_contact_user_profile(self.id)
-                self._set_state(self._profile["presence_status"])
-                self._should_poll = True
+                # If API call succeeds but we are unavailable, that means we just regained
+                # connectivity to Zoom so we should do a single poll to update status.
+                if not self._available:
+                    self._set_state(self._profile["presence_status"])
+                    self._available = True
             except:
-                _LOGGER.info(
-                    "Unable to poll presence status for user %s (%s). May have to rely solely on webhooks.",
-                    self.id,
-                    self.email,
-                    exc_info=True,
-                )
-                self._should_poll = False
+                # If API call fails we can assume we can't talk to Zoom
+                self._available = False
 
     async def _restore_state(self) -> None:
         """Restore state from last known state."""
@@ -100,8 +98,8 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
 
         if self.id:
             try:
-                contact = await self._api.async_get_contact_user_profile(self.id)
-                status = contact["presence_status"]
+                self._profile = await self._api.async_get_contact_user_profile(self.id)
+                status = self._profile["presence_status"]
                 _LOGGER.debug("Retrieved initial Zoom status: %s", status)
                 self._set_state(status)
                 self.async_write_ha_state()
@@ -125,10 +123,10 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         """Set Zoom and HA state."""
         self._zoom_event_state = zoom_event_state
         self._state = (
-            STATE_ON
+            STATE_OFF
             if self._zoom_event_state
-            and self._zoom_event_state.lower() == CONNECTIVITY_STATUS_ON.lower()
-            else STATE_OFF
+            and self._zoom_event_state.lower() == CONNECTIVITY_STATUS_OFF.lower()
+            else STATE_ON
         )
         _LOGGER.debug(
             "Set Zoom state to %s and HA state to %s", zoom_event_state, self._state
@@ -214,12 +212,12 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return True
+        return self._available
 
     @property
     def should_poll(self) -> bool:
         """Should entity be polled."""
-        return self._should_poll
+        return True
 
 
 class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
@@ -247,7 +245,7 @@ class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
     @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
-        return not self._profile
+        return not self.available
 
     @property
     def profile(self) -> Optional[Dict[str, str]]:
