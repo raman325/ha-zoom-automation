@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import Event
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
@@ -69,7 +70,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         self._state = STATE_OFF
         self._available = True
 
-    async def async_update(self) -> None:
+    async def _async_update(self) -> None:
         """Update state of entity."""
         if self.id:
             try:
@@ -79,6 +80,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
                 if not self._available:
                     self._set_state(self._profile["presence_status"])
                     self._available = True
+                    self.async_write_ha_state()
             except:
                 # If API call fails we can assume we can't talk to Zoom
                 self._available = False
@@ -94,6 +96,11 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         await super().async_added_to_hass()
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
+        self.async_on_remove(
+            async_track_time_interval(
+                self._hass, self._async_update, timedelta(seconds=30)
+            )
         )
 
         if self.id:
@@ -217,7 +224,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
     @property
     def should_poll(self) -> bool:
         """Should entity be polled."""
-        return True
+        return False
 
 
 class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
