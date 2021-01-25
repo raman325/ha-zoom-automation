@@ -2,6 +2,7 @@
 from datetime import timedelta
 import json
 from logging import getLogger
+from re import error
 from typing import Any, Dict, List
 
 from aiohttp.web import Request, Response
@@ -25,7 +26,6 @@ def valid_external_url(hass: HomeAssistant) -> bool:
         return True
     except NoURLAvailableError:
         _LOGGER.error(
-            (
                 "You do not have an external URL for your Home Assistant instance "
                 "configured which is needed to set up the Zoom integration. "
                 "You need to set the `external_url` property in the "
@@ -34,7 +34,6 @@ def valid_external_url(hass: HomeAssistant) -> bool:
                 "Configuration` UI, before trying to setup the Zoom integration "
                 "again. You can learn more about configuring this parameter at "
                 "https://www.home-assistant.io/docs/configuration/basic"
-            )
         )
         return False
 
@@ -120,9 +119,11 @@ class ZoomWebhookRequestView(HomeAssistantView):
                 status = WEBHOOK_RESPONSE_SCHEMA(data)
                 _LOGGER.debug("Received event: %s", json.dumps(status))
                 hass.bus.async_fire(HA_ZOOM_EVENT, status)
-            except:
+            except Exception as err:
                 _LOGGER.warning(
-                    "Received authorized but unknown event: %s", await request.text()
+                    "Received authorized event but unable to parse: %s (%s)",
+                    await request.text(),
+                    err,
                 )
 
         return Response(status=HTTP_OK)

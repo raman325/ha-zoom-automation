@@ -44,5 +44,6 @@ CONNECTIVITY_STATUS_OFF = "Available"
 HA_ZOOM_EVENT = f"{DOMAIN}_webhook"
 
 WEBHOOK_RESPONSE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_EVENT): string, vol.Required(ATTR_PAYLOAD): dict}
+    {vol.Required(ATTR_EVENT): string, vol.Required(ATTR_PAYLOAD): dict},
+    extra=vol.ALLOW_EXTRA,
 )
