@@ -1,6 +1,6 @@
 """Config flow for Zoom Automation."""
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
@@ -34,7 +34,7 @@ class ZoomOAuth2FlowHandler(
         return _LOGGER
 
     def __init__(self) -> None:
-        """Intantiate config flow."""
+        """Instantiate config flow."""
         self._name: str = ""
         self._stored_data = {}
         super().__init__()
@@ -72,6 +72,28 @@ class ZoomOAuth2FlowHandler(
 
         return await self.async_step_pick_implementation()
 
+    async def async_step_reauth(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Perform reauth when OAuth token is invalid."""
+        self._stored_data = {
+            CONF_NAME: user_input[CONF_NAME],
+            CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
+            CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
+            CONF_VERIFICATION_TOKEN: user_input[CONF_VERIFICATION_TOKEN],
+        }
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Confirm reauth."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=vol.Schema({})
+            )
+        return await self.async_step_user()
+
     async def async_step_choose_name(
         self, user_input: Dict[str, Any] = None
     ) -> Dict[str, Any]:
@@ -94,7 +116,18 @@ class ZoomOAuth2FlowHandler(
         self, data: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Create an entry for the flow."""
-        if not self._name:
+        # Update existing entry if performing reauth
+        if self.source == config_entries.SOURCE_REAUTH:
+            data.update(self._stored_data)
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                if entry.unique_id == self.unique_id:
+                    self.hass.config_entries.async_update_entry(entry, data=data)
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
+                    return self.async_abort(reason="reauth_successful")
+
+        elif not self._name:
             self._stored_data = data.copy()
             return await self.async_step_choose_name()
 

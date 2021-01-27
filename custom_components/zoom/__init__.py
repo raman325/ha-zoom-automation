@@ -1,7 +1,8 @@
 """The Zoom integration."""
 from logging import getLogger
 
-from homeassistant.config_entries import ConfigEntry
+from aiohttp.web_exceptions import HTTPUnauthorized
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -85,7 +86,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_refresh()
     hass.data[DOMAIN][entry.entry_id][USER_PROFILE_COORDINATOR] = coordinator
     hass.data[DOMAIN][entry.entry_id][API] = api
-    my_profile = await api.async_get_my_user_profile()
+    try:
+        my_profile = await api.async_get_my_user_profile()
+    except HTTPUnauthorized:
+        # If we are not authorized, we need to revalidate OAuth
+        if not [
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["context"]["source"] == SOURCE_REAUTH
+            and flow["context"]["unique_id"] == entry.unique_id
+        ]:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_REAUTH, "unique_id": entry.unique_id},
+                    data=entry.data,
+                )
+            )
+        return False
     new_data = entry.data.copy()
     new_data[CONF_ID] = my_profile.get("id")  # type: ignore
     hass.config_entries.async_update_entry(entry, data=new_data)  # type: ignore

@@ -26,14 +26,14 @@ def valid_external_url(hass: HomeAssistant) -> bool:
         return True
     except NoURLAvailableError:
         _LOGGER.error(
-                "You do not have an external URL for your Home Assistant instance "
-                "configured which is needed to set up the Zoom integration. "
-                "You need to set the `external_url` property in the "
-                "`homeassistant` section of your `configuration.yaml`, or set the "
-                "`External URL` property in the Home Assistant `General "
-                "Configuration` UI, before trying to setup the Zoom integration "
-                "again. You can learn more about configuring this parameter at "
-                "https://www.home-assistant.io/docs/configuration/basic"
+            "You do not have an external URL for your Home Assistant instance "
+            "configured which is needed to set up the Zoom integration. "
+            "You need to set the `external_url` property in the "
+            "`homeassistant` section of your `configuration.yaml`, or set the "
+            "`External URL` property in the Home Assistant `General "
+            "Configuration` UI, before trying to setup the Zoom integration "
+            "again. You can learn more about configuring this parameter at "
+            "https://www.home-assistant.io/docs/configuration/basic"
         )
         return False
 
