@@ -1,5 +1,5 @@
 """Constants for the Zoom integration."""
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
 from homeassistant.helpers.config_validation import string
 import voluptuous as vol
 
@@ -19,9 +19,11 @@ USER_PROFILE_URL = "users/me"
 USER_PROFILE_COORDINATOR = "user_profile_coordinator"
 CONTACT_LIST_URL = "chat/users/me/contacts"
 CONTACT_LIST_COORDINATOR = "contact_list_coordinator"
+VERIFICATION_TOKENS = "verification_tokens"
 
 ZOOM_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): vol.Coerce(str),
         vol.Required(CONF_CLIENT_ID): vol.Coerce(str),
         vol.Required(CONF_CLIENT_SECRET): vol.Coerce(str),
         vol.Required(CONF_VERIFICATION_TOKEN): vol.Coerce(str),

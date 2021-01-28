@@ -14,7 +14,14 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import ZoomAPI
-from .const import DEFAULT_NAME, DOMAIN, HA_URL, HA_ZOOM_EVENT, WEBHOOK_RESPONSE_SCHEMA
+from .const import (
+    DEFAULT_NAME,
+    DOMAIN,
+    HA_URL,
+    HA_ZOOM_EVENT,
+    VERIFICATION_TOKENS,
+    WEBHOOK_RESPONSE_SCHEMA,
+)
 
 _LOGGER = getLogger(__name__)
 
@@ -63,9 +70,11 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         authorize_url: str,
         token_url: str,
         verification_token: str,
+        name: str,
     ) -> None:
         """Initialize local auth implementation."""
         self._verification_token = verification_token
+        self._name = name
         super().__init__(
             hass, domain, client_id, client_secret, authorize_url, token_url
         )
@@ -73,12 +82,12 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
     @property
     def name(self) -> str:
         """Name of the implementation."""
-        return DEFAULT_NAME
+        return self._name
 
     @property
     def domain(self) -> str:
         """Domain of the implementation."""
-        return self._domain
+        return self._name
 
     @property
     def redirect_uri(self) -> str:
@@ -95,19 +104,14 @@ class ZoomWebhookRequestView(HomeAssistantView):
     url = HA_URL
     name = HA_URL[1:].replace("/", ":")
 
-    def __init__(self, verification_token: str) -> None:
-        """Initialize view."""
-        self._verification_token = verification_token
-
     async def post(self, request: Request) -> Response:
         """Respond to requests from the device."""
         hass = request.app["hass"]
         headers = request.headers
+        verification_tokens = hass.data.get(DOMAIN, {}).get(VERIFICATION_TOKENS, set())
+        token = headers.get("authorization")
 
-        if not (
-            "authorization" in headers
-            and headers["authorization"] == self._verification_token
-        ):
+        if not token or (verification_tokens and token not in verification_tokens):
             _LOGGER.warning(
                 "Received unauthorized request: %s (Headers: %s)",
                 await request.text(),
@@ -118,7 +122,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
                 data = await request.json()
                 status = WEBHOOK_RESPONSE_SCHEMA(data)
                 _LOGGER.debug("Received event: %s", json.dumps(status))
-                hass.bus.async_fire(HA_ZOOM_EVENT, status)
+                hass.bus.async_fire(f"{HA_ZOOM_EVENT}_{token}", status)
             except Exception as err:
                 _LOGGER.warning(
                     "Received authorized event but unable to parse: %s (%s)",

@@ -20,6 +20,7 @@ from .common import ZoomAPI, ZoomUserProfileDataUpdateCoordinator, get_contact_n
 from .const import (
     API,
     ATTR_EVENT,
+    CONF_VERIFICATION_TOKEN,
     CONNECTIVITY_EVENT,
     CONNECTIVITY_ID,
     CONNECTIVITY_STATUS,
@@ -248,9 +249,12 @@ class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
         """Register callbacks when entity is added."""
         await super().async_added_to_hass()
 
+        token = self._config_entry.data[CONF_VERIFICATION_TOKEN]
         # Register callback for webhook event
         self.async_on_remove(
-            self.hass.bus.async_listen(HA_ZOOM_EVENT, self.async_event_received)
+            self.hass.bus.async_listen(
+                f"{HA_ZOOM_EVENT}_{token}", self.async_event_received
+            )
         )
 
     @property

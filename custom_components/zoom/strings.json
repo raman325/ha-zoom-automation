@@ -5,6 +5,7 @@
             "user": {
                 "title": "Connect to a new Zoom app",
                 "data": {
+                    "name": "Account Name",
                     "client_id": "Client ID (obtained from Zoom app)",
                     "client_secret": "Client Secret (obtained from Zoom app)",
                     "verification_token": "Verification Token (obtained from the Features section of custom Zoom app)"
@@ -14,6 +15,12 @@
                 "title": "Create a name for your account",
                 "data": {
                     "name": "Account Name"
+                }
+            },
+            "pick_implementation": {
+                "title": "Choose credentials to use",
+                "data": {
+                    "implementation": "Account Name"
                 }
             },
             "reauth_confirm": {

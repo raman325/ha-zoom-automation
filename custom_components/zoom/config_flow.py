@@ -11,6 +11,7 @@ import voluptuous as vol
 from .common import ZoomOAuth2Implementation, valid_external_url
 from .const import (
     CONF_VERIFICATION_TOKEN,
+    DEFAULT_NAME,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
@@ -35,7 +36,7 @@ class ZoomOAuth2FlowHandler(
 
     def __init__(self) -> None:
         """Instantiate config flow."""
-        self._name: str = ""
+        self._name: str = None
         self._stored_data = {}
         super().__init__()
 
@@ -57,6 +58,10 @@ class ZoomOAuth2FlowHandler(
             return self.async_show_form(step_id="user", data_schema=ZOOM_SCHEMA)
 
         if user_input:
+            await self.async_set_unique_id(
+                f"{DOMAIN}_{slugify(user_input[CONF_NAME])}", raise_on_progress=True
+            )
+            self._abort_if_unique_id_configured()
             self.async_register_implementation(
                 self.hass,
                 ZoomOAuth2Implementation(
@@ -67,6 +72,7 @@ class ZoomOAuth2FlowHandler(
                     OAUTH2_AUTHORIZE,
                     OAUTH2_TOKEN,
                     user_input[CONF_VERIFICATION_TOKEN],
+                    user_input[CONF_NAME],
                 ),
             )
 
@@ -110,7 +116,7 @@ class ZoomOAuth2FlowHandler(
         )
         self._abort_if_unique_id_configured()
 
-        return await self.async_oauth_create_entry()
+        return await self.async_oauth_create_entry(self._stored_data)
 
     async def async_oauth_create_entry(
         self, data: Dict[str, Any] = None
@@ -126,19 +132,23 @@ class ZoomOAuth2FlowHandler(
                         self.hass.config_entries.async_reload(entry.entry_id)
                     )
                     return self.async_abort(reason="reauth_successful")
-
-        elif not self._name:
+        elif self.flow_impl.name == DEFAULT_NAME and self._name is None:
             self._stored_data = data.copy()
             return await self.async_step_choose_name()
 
-        data = self._stored_data
         self.flow_impl: ZoomOAuth2Implementation
+        name = self._name or self.flow_impl.name
         data.update(
             {
-                CONF_NAME: self._name,
+                CONF_NAME: name,
                 CONF_CLIENT_ID: self.flow_impl.client_id,
                 CONF_CLIENT_SECRET: self.flow_impl.client_secret,
                 CONF_VERIFICATION_TOKEN: self.flow_impl._verification_token,
             }
         )
-        return self.async_create_entry(title=self._name, data=data)
+        if not self.unique_id:
+            await self.async_set_unique_id(
+                f"{DOMAIN}_{slugify(name)}", raise_on_progress=True
+            )
+            self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=name, data=data)
