@@ -36,8 +36,8 @@ def ensure_multiple_have_names(value: List[Dict[str, str]]) -> List[Dict[str, st
     """Validate that for multiple entries, they have names."""
     if len({entry[CONF_NAME] for entry in value}) != len(value):
         raise vol.Invalid(
-                "You must provide a unique name for each Zoom app when providing "
-                "multiple sets of application credentials."
+            "You must provide a unique name for each Zoom app when providing "
+            "multiple sets of application credentials."
         )
 
     return value

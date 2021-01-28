@@ -237,24 +237,22 @@ class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
 
     async def async_event_received(self, event: Event) -> None:
         """Update status if event received for this entity."""
+        status = event.data["status"]
+        token = event.data["token"]
         if (
-            event.data[ATTR_EVENT] == CONNECTIVITY_EVENT
-            and get_data_from_path(event.data, CONNECTIVITY_ID).lower()
-            == self.id.lower()
+            token == self._config_entry.data[CONF_VERIFICATION_TOKEN]
+            and status[ATTR_EVENT] == CONNECTIVITY_EVENT
+            and get_data_from_path(status, CONNECTIVITY_ID).lower() == self.id.lower()
         ):
-            self._set_state(get_data_from_path(event.data, CONNECTIVITY_STATUS))
+            self._set_state(get_data_from_path(status, CONNECTIVITY_STATUS))
             self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
         await super().async_added_to_hass()
-
-        token = self._config_entry.data[CONF_VERIFICATION_TOKEN]
         # Register callback for webhook event
         self.async_on_remove(
-            self.hass.bus.async_listen(
-                f"{HA_ZOOM_EVENT}_{token}", self.async_event_received
-            )
+            self.hass.bus.async_listen(f"{HA_ZOOM_EVENT}", self.async_event_received)
         )
 
     @property
