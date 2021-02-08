@@ -1,8 +1,10 @@
 {
     "name": "Zoom",
     "hacs": "0.24.0",
-    "domains": ["binary_sensor", "sensor"],
+    "domains": ["binary_sensor"],
     "iot_class": "Cloud Push",
     "render_readme": true,
-    "homeassistant": "0.110.0"
+    "homeassistant": "0.110.0",
+    "zip_release": true,
+    "filename": "zoom.zip"
 }

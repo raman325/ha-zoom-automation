@@ -5,5 +5,6 @@
     "documentation": "https://github.com/raman325/ha-zoom-automation",
     "issue_tracker": "https://github.com/raman325/ha-zoom-automation/issues",
     "codeowners": ["@raman325"],
-    "dependencies": ["http"]
+    "dependencies": ["http"],
+    "version": "v0.0.0"
 }

@@ -1,0 +1,29 @@
+name: Release
+on:
+  release:
+    types: [published]
+jobs:
+  release_zip_file:
+    name: Prepare release asset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v1
+      - name: Get Version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: Update versions
+        run: |
+          sed -i '/version/c\  \"version\": \"${{ steps.get_version.outputs.VERSION }}\"' ${{ github.workspace }}/custom_components/zoom/manifest.json
+      - name: ZIP directory
+        run: |
+          cd ${{ github.workspace }}/custom_components/zoom
+          zip zoom.zip -r ./
+      - name: Upload zip to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ github.workspace }}/custom_components/zoom/zoom.zip
+          asset_name: zoom.zip
+          tag: ${{ github.ref }}
+          overwrite: true
