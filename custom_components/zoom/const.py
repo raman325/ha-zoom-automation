@@ -9,6 +9,7 @@ DEFAULT_NAME = "Zoom"
 
 HA_URL = f"/api/{DOMAIN}"
 
+CONF_CONNECTIVITY_ON_STATUSES = "connectivity_on_statuses"
 CONF_VERIFICATION_TOKEN = "verification_token"
 
 OAUTH2_AUTHORIZE = "https://zoom.us/oauth/authorize"
@@ -42,7 +43,16 @@ CONNECTIVITY_EVENT = "user.presence_status_updated"
 CONNECTIVITY_STATUS = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_CONNECTIVITY_STATUS]
 CONNECTIVITY_ID = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_ID]
 CONNECTIVITY_OFF_STATUSES = ["Available"]
-CONNECTIVITY_ON_STATUSES = ["In_Meeting", "Presenting", "On_Phone_Call", "In_Calendar_Event"]
+ALL_CONNECTIVITY_STATUSES = [
+    "In_Meeting",
+    "Presenting",
+    "On_Phone_Call",
+    "In_Calendar_Event",
+    "Available",
+    "Away",
+    "Do_Not_Disturb",
+]
+DEFAULT_CONNECTIVITY_ON_STATUSES = ["In_Meeting", "Presenting", "On_Phone_Call"]
 
 HA_ZOOM_EVENT = f"{DOMAIN}_webhook"
 

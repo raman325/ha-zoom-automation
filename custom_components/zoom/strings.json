@@ -38,5 +38,16 @@
         "create_entry": {
             "default": "Successfully authenticated"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Update Zoom options",
+                "description": "Pick which statuses will cause the `binary_sensor` to turn `on`. Any statuses that are not selected will turn the sensor `off`.",
+                "data": {
+                    "connectivity_on_statuses": "Statuses that turn the binary sensor on"
+                }
+            }
+        }
     }
 }

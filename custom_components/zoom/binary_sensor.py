@@ -20,11 +20,12 @@ from .common import ZoomAPI, ZoomUserProfileDataUpdateCoordinator, get_contact_n
 from .const import (
     API,
     ATTR_EVENT,
+    CONF_CONNECTIVITY_ON_STATUSES,
     CONF_VERIFICATION_TOKEN,
     CONNECTIVITY_EVENT,
     CONNECTIVITY_ID,
-    CONNECTIVITY_ON_STATUSES,
     CONNECTIVITY_STATUS,
+    DEFAULT_CONNECTIVITY_ON_STATUSES,
     DOMAIN,
     HA_ZOOM_EVENT,
     USER_PROFILE_COORDINATOR,
@@ -40,6 +41,12 @@ async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up a Zoom presence sensor entry."""
+    # Set default options
+    if not config_entry.options:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options={CONF_CONNECTIVITY_ON_STATUSES: DEFAULT_CONNECTIVITY_ON_STATUSES},
+        )
     entity = ZoomAuthenticatedUserBinarySensor(hass, config_entry)
     async_add_entities([entity], update_before_add=True)
 
@@ -137,7 +144,8 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         self._state = (
             STATE_ON
             if self._zoom_event_state
-            and self._zoom_event_state in CONNECTIVITY_ON_STATUSES
+            and self._zoom_event_state
+            in self._config_entry.options[CONF_CONNECTIVITY_ON_STATUSES]
             else STATE_OFF
         )
         _LOGGER.debug(

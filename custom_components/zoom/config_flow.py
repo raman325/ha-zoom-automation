@@ -4,12 +4,15 @@ from typing import Any, Dict, Optional
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.core import callback
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.util import slugify
 import voluptuous as vol
 
 from .common import ZoomOAuth2Implementation, valid_external_url
 from .const import (
+    ALL_CONNECTIVITY_STATUSES,
+    CONF_CONNECTIVITY_ON_STATUSES,
     CONF_VERIFICATION_TOKEN,
     DEFAULT_NAME,
     DOMAIN,
@@ -21,6 +24,35 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+class ZoomOptionsFlow(config_entries.OptionsFlow):
+    """Options flow for Zoom integration."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize zoom options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """Manage the zoom options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_CONNECTIVITY_ON_STATUSES,
+                        default=self.config_entry.options[
+                            CONF_CONNECTIVITY_ON_STATUSES
+                        ],
+                    ): cv.multi_select(ALL_CONNECTIVITY_STATUSES)
+                }
+            ),
+        )
+
+
 class ZoomOAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
@@ -28,6 +60,15 @@ class ZoomOAuth2FlowHandler(
 
     DOMAIN = DOMAIN
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
+    VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> ZoomOptionsFlow:
+        """Get the options flow for this handler."""
+        return ZoomOptionsFlow(config_entry)
 
     @property
     def logger(self) -> logging.Logger:
