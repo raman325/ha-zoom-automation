@@ -42,7 +42,7 @@ CONNECTIVITY_EVENT = "user.presence_status_updated"
 CONNECTIVITY_STATUS = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_CONNECTIVITY_STATUS]
 CONNECTIVITY_ID = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_ID]
 CONNECTIVITY_OFF_STATUSES = ["Available"]
-CONNECTIVITY_ON_STATUSES = ["In_Meeting", "Presenting", "On_Phone_Call"]
+CONNECTIVITY_ON_STATUSES = ["In_Meeting", "Presenting", "On_Phone_Call", "In_Calendar_Event"]
 
 HA_ZOOM_EVENT = f"{DOMAIN}_webhook"
 
