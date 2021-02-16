@@ -23,8 +23,8 @@ from .const import (
     CONF_VERIFICATION_TOKEN,
     CONNECTIVITY_EVENT,
     CONNECTIVITY_ID,
+    CONNECTIVITY_ON_STATUSES,
     CONNECTIVITY_STATUS,
-    CONNECTIVITY_STATUS_OFF,
     DOMAIN,
     HA_ZOOM_EVENT,
     USER_PROFILE_COORDINATOR,
@@ -135,10 +135,10 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         """Set Zoom and HA state."""
         self._zoom_event_state = zoom_event_state
         self._state = (
-            STATE_OFF
+            STATE_ON
             if self._zoom_event_state
-            and self._zoom_event_state.lower() == CONNECTIVITY_STATUS_OFF.lower()
-            else STATE_ON
+            and self._zoom_event_state in CONNECTIVITY_ON_STATUSES
+            else STATE_OFF
         )
         _LOGGER.debug(
             "Set Zoom state to %s and HA state to %s", zoom_event_state, self._state
