@@ -170,6 +170,20 @@ zoom:
 
 </details>
 
+## Change Zoom status to binary sensor state mapping
+
+By default, the binary sensor will be `on`, or `Connected`, when your Zoom account is in the following statuses:
+- `In_Meeting`
+- `Presenting`
+- `On_Phone_Call`
+
+All other stauses will cause the binary sensor to be `off`, or `Disconnected`. If you'd like to change this behavior, you can update which statuses are used to determine when the binary sensor is `on` by using the Options config flow as follows:
+
+1. Navigate to "Configuration" -> "Integrations" and look for the Zoom card
+2. Click the "Options" link on the card
+3. Select your statuses
+4. Click "Submit" to apply the changes
+
 ## Monitoring custom events (non-presence related)
 
 Events from all of the linked accounts will all be sent using the same event, so in order to create sensible automations, you will need to be able to distinguish between accounts. The `binary_sensor` created for each account you link to will have all of the profile information you need. You can use the `id`, `email`, or `account_id` attributes of the sensor to identify events coming from the account. The information you need from the webhook event to match to the correct account will be in different places depending on the event type. In addition, you should lowercase both the property from the event and the sensor data to ensure a match. In testing I found that Zoom sends a lowercase `id`, so it just seems like the safer approach.
