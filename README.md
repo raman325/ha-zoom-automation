@@ -177,7 +177,7 @@ By default, the binary sensor will be `on`, or `Connected`, when your Zoom accou
 - `Presenting`
 - `On_Phone_Call`
 
-All other stauses will cause the binary sensor to be `off`, or `Disconnected`. If you'd like to change this behavior, you can update which statuses are used to determine when the binary sensor is `on` by using the Options config flow as follows:
+All other statuses will cause the binary sensor to be `off`, or `Disconnected`. If you'd like to change this behavior, you can update which statuses are used to determine when the binary sensor is `on` by using the Options config flow as follows:
 
 1. Navigate to "Configuration" -> "Integrations" and look for the Zoom card
 2. Click the "Options" link on the card
