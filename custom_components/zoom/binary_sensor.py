@@ -11,6 +11,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import Event
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -101,14 +105,41 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         if restored_state:
             self._state = restored_state.state
 
+    @staticmethod
+    async def _async_send_update_options_signal(
+        hass: HomeAssistantType, config_entry: ConfigEntry
+    ) -> None:
+        """Send update event when Zoom config entry is updated."""
+        async_dispatcher_send(hass, config_entry.entry_id)
+
+    async def _async_update_options(self) -> None:
+        """Update options if the update signal comes from this entity."""
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""
         await super().async_added_to_hass()
 
+        # Register callback for when config entry is updated.
+        self.async_on_remove(
+            self._config_entry.add_update_listener(
+                self._async_send_update_options_signal
+            )
+        )
+
+        # Register callback for update event
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._config_entry.entry_id, self._async_update_options
+            )
+        )
+
+        # Update state when coordinator updates
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
 
+        # Manually set an update interval so we can disable it if needed
         self.async_on_remove(
             async_track_time_interval(
                 self._hass, self._async_update, timedelta(seconds=30)
