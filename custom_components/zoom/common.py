@@ -1,8 +1,6 @@
 """Common classes and functions for Zoom."""
 from datetime import timedelta
-import json
 from logging import getLogger
-from re import error
 from typing import Any, Dict, List
 
 from aiohttp.web import Request, Response
@@ -109,29 +107,30 @@ class ZoomWebhookRequestView(HomeAssistantView):
         hass = request.app["hass"]
         headers = request.headers
         verification_tokens = hass.data.get(DOMAIN, {}).get(VERIFICATION_TOKENS, set())
-        token = headers.get("authorization")
+        tokens = headers.getall("authorization")
 
-        if not token or (verification_tokens and token not in verification_tokens):
-            _LOGGER.warning(
-                "Received unauthorized request: %s (Headers: %s)",
-                await request.text(),
-                json.dumps(request.headers),
-            )
-        else:
-            try:
-                data = await request.json()
-                status = WEBHOOK_RESPONSE_SCHEMA(data)
-                _LOGGER.debug("Received event: %s", json.dumps(status))
-                hass.bus.async_fire(
-                    f"{HA_ZOOM_EVENT}", {"status": status, "token": token}
-                )
-            except Exception as err:
-                _LOGGER.warning(
-                    "Received authorized event but unable to parse: %s (%s)",
-                    await request.text(),
-                    err,
-                )
+        for token in tokens:
+            if not verification_tokens or (token and token in verification_tokens):
+                try:
+                    data = await request.json()
+                    status = WEBHOOK_RESPONSE_SCHEMA(data)
+                    _LOGGER.debug("Received event: %s", status)
+                    hass.bus.async_fire(
+                        f"{HA_ZOOM_EVENT}", {"status": status, "token": token}
+                    )
+                except Exception as err:
+                    _LOGGER.warning(
+                        "Received authorized event but unable to parse: %s (%s)",
+                        await request.text(),
+                        err,
+                    )
+                return Response(status=HTTP_OK)
 
+        _LOGGER.warning(
+            "Received unauthorized request: %s (Headers: %s)",
+            await request.text(),
+            request.headers,
+        )
         return Response(status=HTTP_OK)
 
 

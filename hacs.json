@@ -1,6 +1,5 @@
 {
     "name": "Zoom",
-    "hacs": "0.24.0",
     "domains": ["binary_sensor"],
     "iot_class": "Cloud Push",
     "render_readme": true,
