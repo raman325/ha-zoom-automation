@@ -110,7 +110,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
         tokens = headers.getall("authorization")
 
         for token in tokens:
-            if token and verification_tokens and token in verification_tokens:
+            if not verification_tokens or (token and token in verification_tokens):
                 try:
                     data = await request.json()
                     status = WEBHOOK_RESPONSE_SCHEMA(data)
