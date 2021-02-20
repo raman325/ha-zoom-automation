@@ -1,8 +1,6 @@
 """Common classes and functions for Zoom."""
 from datetime import timedelta
-import json
 from logging import getLogger
-from re import error
 from typing import Any, Dict, List
 
 from aiohttp.web import Request, Response
