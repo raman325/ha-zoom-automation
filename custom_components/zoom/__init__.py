@@ -2,6 +2,7 @@
 from logging import getLogger
 from typing import Dict, List
 
+from aiohttp.client_exceptions import ClientResponseError
 from aiohttp.web_exceptions import HTTPUnauthorized
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ID, CONF_NAME
@@ -110,7 +111,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         my_profile = await api.async_get_my_user_profile()
-    except HTTPUnauthorized:
+    except (HTTPUnauthorized, ClientResponseError) as err:
+        if isinstance(err, ClientResponseError) and err.status != 401:
+            return False
+
         # If we are not authorized, we need to revalidate OAuth
         if not [
             flow
