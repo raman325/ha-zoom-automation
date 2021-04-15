@@ -90,12 +90,20 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
                 # If API call succeeds but we are unavailable, that means we just regained
                 # connectivity to Zoom so we should do a single poll to update status.
                 if not self._available:
+                    _LOGGER.info(
+                        "We can reach Zoom again, polling for current status in case "
+                        "we missed updates"
+                    )
                     self._set_state(self._profile["presence_status"])
                     self._available = True
                     self.async_write_ha_state()
             except:
                 # If API call fails we can assume we can't talk to Zoom
                 if self._available:
+                    _LOGGER.warning(
+                        "Unable to reach Zoom, we may miss status updates until we "
+                        "can connect again"
+                    )
                     self._available = False
                     self.async_write_ha_state()
 
