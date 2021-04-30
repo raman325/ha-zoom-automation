@@ -6,5 +6,6 @@
     "issue_tracker": "https://github.com/raman325/ha-zoom-automation/issues",
     "codeowners": ["@raman325"],
     "dependencies": ["http"],
+    "iot_class": "cloud_push",
     "version": "v0.0.0"
 }
