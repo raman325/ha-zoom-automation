@@ -57,11 +57,11 @@ You will get a binary sensor out of the box:
 5. Enter the following `Redirect URL for OAuth`: `<BASE_HA_URL>/auth/external/callback` (replace `<BASE_HA_URL>` with the URL you configured inside of Home Assistant as the external URL, e.g. `https://ha.example.com`)
 6. Enter your `<BASE_HA_URL>` in the `Whitelist URL` section, then hit `Continue`.
 7. The `App Name` should already be filled out. A `Short Description` and `Long Description` are required, but since this app is only for you, it doesn't matter what you enter here. You will also need to add a `Name` and `Email Address` in the `Developer Contact Information` section. Click `Continue` once you are done.
-8. Make note of the `Verification Token` on the `Feature` page as you will need it for your configuration later.
-9. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
-10. Enter a name for this subscription (does not matter).
-11. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/zoom`.
-12. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. To use the `binary_sensor` provided by the integration, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`. If you want to get more details about when you start a meeting, add `Start Meeting` under `Meeting`.
+8. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
+9. Enter a name for this subscription (does not matter).
+10. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/zoom`.
+11. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. To use the `binary_sensor` provided by the integration, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`. If you want to get more details about when you start a meeting, add `Start Meeting` under `Meeting`.
+12. Make note of the `Verification Token` on the `Feature` page as you will need it for your configuration later.
 13. Once you are done, click `Done`, then `Save` the subscription before hitting `Continue`.
 14. The `Scopes` section should have already be updated to include at least one permission based on the events you choose to monitor. If you want to use the `binary_sensor`, you will need to add another scope so that the initial status of your sensor is set correctly, otherwise the integration will naively restore your last state on restart. To do this, click `Add Scopes` in the top right of the main page, go to the `Chat` section, enable the checkbox next to `View current user's chat contact information` (the scope is called `chat_contact:read`) and click `Done`. Click `Continue` to save what you did.
 15. You are now ready to configure Home Assistant!
