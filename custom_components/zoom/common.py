@@ -1,11 +1,11 @@
 """Common classes and functions for Zoom."""
 from datetime import timedelta
+from http import HTTPStatus
 from logging import getLogger
 from typing import Any, Dict, List
 
 from aiohttp.web import Request, Response
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_OK
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -124,14 +124,14 @@ class ZoomWebhookRequestView(HomeAssistantView):
                         await request.text(),
                         err,
                     )
-                return Response(status=HTTP_OK)
+                return Response(status=HTTPStatus.OK)
 
         _LOGGER.warning(
             "Received unauthorized request: %s (Headers: %s)",
             await request.text(),
             request.headers,
         )
-        return Response(status=HTTP_OK)
+        return Response(status=HTTPStatus.OK)
 
 
 class ZoomUserProfileDataUpdateCoordinator(DataUpdateCoordinator):
