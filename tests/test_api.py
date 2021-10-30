@@ -1,5 +1,7 @@
 """Test zoom API."""
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, HTTP_OK
+from http import HTTPStatus
+
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 from pytest_homeassistant_custom_component.async_mock import patch
 from pytest_homeassistant_custom_component.test_util.aiohttp import (
@@ -39,7 +41,7 @@ async def test_api(hass):
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_request",
         return_value=AiohttpClientMockResponse(
-            "get", "zoom_url", status=HTTP_OK, json={"id": "test", "first_name": "test"}
+            "get", "zoom_url", status=HTTPStatus.OK, json={"id": "test", "first_name": "test"}
         ),
     ):
         await api.async_get_contact_user_profile("test")
@@ -49,7 +51,7 @@ async def test_api(hass):
         return_value=AiohttpClientMockResponse(
             "get",
             "zoom_url",
-            status=HTTP_OK,
+            status=HTTPStatus.OK,
             json={
                 "next_page_token": "",
                 "contacts": [{"id": "test", "first_name": "test"}],
@@ -61,7 +63,7 @@ async def test_api(hass):
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_request",
         return_value=AiohttpClientMockResponse(
-            "get", "zoom_url", status=HTTP_OK, json={"id": "test", "first_name": "test"}
+            "get", "zoom_url", status=HTTPStatus.OK, json={"id": "test", "first_name": "test"}
         ),
     ):
         await api.async_get_my_user_profile()
