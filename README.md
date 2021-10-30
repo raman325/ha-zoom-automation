@@ -205,10 +205,11 @@ You are free to create automations however you see fit, but here are some tips:
 Your trigger configuration should be as follows:
 ```yaml
 trigger:
-    platform: event
-    event_type: zoom_webhook
-    event_data:
-        event: <ZOOM_EVENT_NAME>
+  platform: event
+  event_type: zoom_webhook
+  event_data:
+    status:
+      event: <ZOOM_EVENT_NAME>
 ```
 
 ### Conditions and Actions
