@@ -208,8 +208,7 @@ trigger:
   platform: event
   event_type: zoom_webhook
   event_data:
-    status:
-      event: <ZOOM_EVENT_NAME>
+    event: <ZOOM_EVENT_NAME>
 ```
 
 ### Conditions and Actions

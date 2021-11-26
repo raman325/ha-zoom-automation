@@ -115,9 +115,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
                     data = await request.json()
                     status = WEBHOOK_RESPONSE_SCHEMA(data)
                     _LOGGER.debug("Received event: %s", status)
-                    hass.bus.async_fire(
-                        f"{HA_ZOOM_EVENT}", {"status": status, "token": token}
-                    )
+                    hass.bus.async_fire(f"{HA_ZOOM_EVENT}", {**status, "token": token})
                 except Exception as err:
                     _LOGGER.warning(
                         "Received authorized event but unable to parse: %s (%s)",

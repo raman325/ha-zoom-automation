@@ -284,8 +284,8 @@ class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
 
     async def async_event_received(self, event: Event) -> None:
         """Update status if event received for this entity."""
-        status = event.data["status"]
-        token = event.data["token"]
+        status = event.data
+        token = status.pop("token")
         if (
             token == self._config_entry.data[CONF_VERIFICATION_TOKEN]
             and status[ATTR_EVENT] == CONNECTIVITY_EVENT

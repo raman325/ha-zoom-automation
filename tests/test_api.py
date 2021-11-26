@@ -41,7 +41,10 @@ async def test_api(hass):
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_request",
         return_value=AiohttpClientMockResponse(
-            "get", "zoom_url", status=HTTPStatus.OK, json={"id": "test", "first_name": "test"}
+            "get",
+            "zoom_url",
+            status=HTTPStatus.OK,
+            json={"id": "test", "first_name": "test"},
         ),
     ):
         await api.async_get_contact_user_profile("test")
@@ -63,7 +66,10 @@ async def test_api(hass):
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_request",
         return_value=AiohttpClientMockResponse(
-            "get", "zoom_url", status=HTTPStatus.OK, json={"id": "test", "first_name": "test"}
+            "get",
+            "zoom_url",
+            status=HTTPStatus.OK,
+            json={"id": "test", "first_name": "test"},
         ),
     ):
         await api.async_get_my_user_profile()
