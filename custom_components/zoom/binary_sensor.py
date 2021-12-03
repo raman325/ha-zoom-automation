@@ -249,7 +249,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         return self.profile.get("account_id")
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return additional state attributes."""
         data = {}
 
