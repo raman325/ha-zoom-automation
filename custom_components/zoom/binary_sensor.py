@@ -80,7 +80,11 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         self._profile = None
         self._zoom_event_state = None
         self._state = STATE_OFF
-        self._available = True
+
+        self._attr_device_class = DEVICE_CLASS_CONNECTIVITY
+        self._attr_unique_id = f"{DOMAIN}_{slugify(self._name)}"
+        self._attr_available = True
+        self._attr_should_poll = False
 
     async def _async_update(self, now) -> None:
         """Update state of entity."""
@@ -89,22 +93,22 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
                 self._profile = await self._api.async_get_contact_user_profile(self.id)
                 # If API call succeeds but we are unavailable, that means we just regained
                 # connectivity to Zoom so we should do a single poll to update status.
-                if not self._available:
+                if not self._attr_available:
                     _LOGGER.info(
                         "We can reach Zoom again, polling for current status in case "
                         "we missed updates"
                     )
                     self._set_state(self._profile["presence_status"])
-                    self._available = True
+                    self._attr_available = True
                     self.async_write_ha_state()
             except:
                 # If API call fails we can assume we can't talk to Zoom
-                if self._available:
+                if self._attr_available:
                     _LOGGER.warning(
                         "Unable to reach Zoom, we may miss status updates until we "
                         "can connect again"
                     )
-                    self._available = False
+                    self._attr_available = False
                     self.async_write_ha_state()
 
     async def _restore_state(self) -> None:
@@ -214,11 +218,6 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         return "mdi:video-off"
 
     @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_CONNECTIVITY
-
-    @property
     def profile(self) -> Optional[Dict[str, str]]:
         """Get user profile."""
         return self._profile or {}
@@ -263,21 +262,6 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
 
         return data if data else None
 
-    @property
-    def unique_id(self) -> str:
-        """Return unique_id for entity."""
-        return f"{DOMAIN}_{slugify(self._name)}"
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return True
-
-    @property
-    def should_poll(self) -> bool:
-        """Should entity be polled."""
-        return False
-
 
 class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
     """Class for Zoom user profile binary sensor for authenticated user."""
@@ -285,7 +269,7 @@ class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
     async def async_event_received(self, event: Event) -> None:
         """Update status if event received for this entity."""
         status = event.data
-        token = status.pop("token")
+        token = status.pop("token", None)
         if (
             token == self._config_entry.data[CONF_VERIFICATION_TOKEN]
             and status[ATTR_EVENT] == CONNECTIVITY_EVENT

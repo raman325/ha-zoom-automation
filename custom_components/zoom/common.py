@@ -13,7 +13,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import ZoomAPI
 from .const import (
-    DEFAULT_NAME,
     DOMAIN,
     HA_URL,
     HA_ZOOM_EVENT,
@@ -98,7 +97,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
 
     requires_auth = False
-    core_allowed = True
+    cors_allowed = True
     url = HA_URL
     name = HA_URL[1:].replace("/", ":")
 
