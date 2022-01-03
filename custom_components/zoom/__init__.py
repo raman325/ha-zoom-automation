@@ -80,9 +80,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Zoom from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+    hass.data.setdefault(DOMAIN, {}).setdefault(VERIFICATION_TOKENS, set())
     hass.data[DOMAIN].setdefault(entry.entry_id, {})
-    hass.data[DOMAIN].setdefault(VERIFICATION_TOKENS, set())
     try:
         implementation = (
             await config_entry_oauth2_flow.async_get_config_entry_implementation(
