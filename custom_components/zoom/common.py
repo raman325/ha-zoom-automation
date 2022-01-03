@@ -113,6 +113,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
                 try:
                     data = await request.json()
                     status = WEBHOOK_RESPONSE_SCHEMA(data)
+                    _LOGGER.debug("Received event: %s", status)
                     status["verification_token"] = token
                     hass.bus.async_fire(f"{HA_ZOOM_EVENT}", status)
                 except Exception as err:
