@@ -54,8 +54,6 @@ PLATFORMS = ["binary_sensor"]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):
     """Set up the Zoom component."""
-    hass.data.setdefault(DOMAIN, {}).setdefault(VERIFICATION_TOKENS, set())
-
     if DOMAIN not in config:
         return True
 
@@ -82,6 +80,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Zoom from a config entry."""
+    hass.data.setdefault(DOMAIN, {}).setdefault(VERIFICATION_TOKENS, set())
     hass.data[DOMAIN].setdefault(entry.entry_id, {})
     try:
         implementation = (
