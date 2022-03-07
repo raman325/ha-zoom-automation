@@ -1,0 +1,53 @@
+{
+    "title": "Zoom",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Conecte-se ao Zoom",
+                "data": {
+                    "name": "Nome da conta",
+                    "client_id": "ID do cliente (obtido do aplicativo Zoom)",
+                    "client_secret": "Segredo do cliente (obtido do aplicativo Zoom)",
+                    "verification_token": "Token de verificação (obtido na seção Recursos do aplicativo Zoom personalizado)"
+                }
+            },
+            "choose_name": {
+                "title": "Crie um nome para sua conta",
+                "data": {
+                    "name": "Nome da conta"
+                }
+            },
+            "pick_implementation": {
+                "title": "Escolha as credenciais a serem usadas",
+                "data": {
+                    "implementation": "Nome da conta"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Reautenticar Integração",
+                "description": "A integração do Zoom precisa autenticar novamente sua conta"
+            }
+        },
+        "abort": {
+            "single_instance_allowed": "Já configurado. Apenas uma única configuração possível.",
+            "missing_configuration": "O componente não está configurado. Por favor, siga a documentação.",
+            "authorize_url_timeout": "Tempo limite gerando URL de autorização.",
+            "no_external_url": "Você não tem um URL externo para sua instância do Home Assistant configurado, o que é necessário para configurar a integração do Zoom. Você precisa definir a `external_url` no `homeassistant` no seu `configuration.yaml`, ou defina a `URL Externa` no Home Assistant em `Configurações - Geral`, antes de tentar configurar a integração do Zoom novamente. Você pode aprender mais sobre como configurar este parâmetro [aqui](https://www.home-assistant.io/docs/configuration/basic)",
+            "reauth_successful": "A reautenticação foi bem-sucedida"
+        },
+        "create_entry": {
+            "default": "Autenticado com sucesso"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Atualizar opções do Zoom",
+                "description": "Escolha quais status farão com que o `binary_sensor` ligue `, ou `Connected`. Quaisquer status que não estejam selecionados irão desligar o sensor, ou 'Desconectado'.",
+                "data": {
+                    "connectivity_on_statuses": "Status"
+                }
+            }
+        }
+    }
+}
