@@ -149,8 +149,8 @@ class ZoomUserProfileDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         try:
             return await self._api.async_get_my_user_profile()
-        except:
-            raise UpdateFailed
+        except Exception as err:
+            raise UpdateFailed from err
 
 
 class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
@@ -174,5 +174,5 @@ class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         try:
             return await self._api.async_get_contacts(self._contact_types)
-        except:
-            raise UpdateFailed
+        except Exception as err:
+            raise UpdateFailed from err

@@ -111,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         my_profile = await api.async_get_my_user_profile()
     except (HTTPUnauthorized, ClientResponseError) as err:
-        if isinstance(err, ClientResponseError) and err.status != 401:
+        if isinstance(err, ClientResponseError) and err.status not in (400, 401):
             return False
 
         # If we are not authorized, we need to revalidate OAuth
