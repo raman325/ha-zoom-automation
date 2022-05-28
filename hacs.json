@@ -1,7 +1,5 @@
 {
     "name": "Zoom",
-    "domains": ["binary_sensor"],
-    "iot_class": "Cloud Push",
     "render_readme": true,
     "homeassistant": "2021.5.0b0",
     "zip_release": true,
