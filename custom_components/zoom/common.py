@@ -3,8 +3,10 @@ from datetime import timedelta
 from http import HTTPStatus
 from logging import getLogger
 from typing import Any, Dict, List
+import hmac
+import hashlib
 
-from aiohttp.web import Request, Response
+from aiohttp.web import Request, Response, json_response
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -122,6 +124,23 @@ class ZoomWebhookRequestView(HomeAssistantView):
                         err,
                     )
                 return Response(status=HTTPStatus.OK)
+
+        try:
+            data = await request.json()
+            if data["event"] == "endpoint.url_validation":
+                plain = data["payload"]["plainToken"]
+                signature = hmac.new(bytes(next(iter(verification_tokens)) , 'latin-1'), msg = bytes(plain , 'latin-1'), digestmod = hashlib.sha256).hexdigest()
+                _LOGGER.info(
+                    "Received validation request: %s",
+                    data
+                )
+                return json_response({'plainToken': plain, 'encryptedToken': signature})
+        except Exception as err:
+           _LOGGER.warning(
+                "failed response to validation request: %s (%s)",
+                data,
+                err,
+            )
 
         _LOGGER.warning(
             "Received unauthorized request: %s (Headers: %s)",
