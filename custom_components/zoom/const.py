@@ -22,18 +22,14 @@ USER_PROFILE_COORDINATOR = "user_profile_coordinator"
 CONTACT_LIST_URL = "chat/users/me/contacts"
 CONTACT_LIST_COORDINATOR = "contact_list_coordinator"
 
-SECRET_TOKEN_DESC = (
-    "Zoom has moved to a new token type for verification, please remove the "
-    "verification token from your config and add the secret token. To learn how to "
-    "update your Zoom app to support this change, check the integration repo's README."
-)
 ZOOM_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): vol.Coerce(str),
         vol.Required(CONF_CLIENT_ID): vol.Coerce(str),
         vol.Required(CONF_CLIENT_SECRET): vol.Coerce(str),
-        vol.Required(CONF_SECRET_TOKEN, description=SECRET_TOKEN_DESC): vol.Coerce(str),
-    }
+        vol.Required(CONF_SECRET_TOKEN): vol.Coerce(str),
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 ATTR_EVENT = "event"
