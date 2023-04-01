@@ -1,7 +1,8 @@
 """The Zoom integration."""
+from __future__ import annotations
 
+from copy import deepcopy
 from logging import getLogger
-from typing import Dict, List
 
 from aiohttp.client_exceptions import ClientResponseError
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -28,21 +29,23 @@ from .common import (
 from .config_flow import ZoomOAuth2FlowHandler
 from .const import (
     API,
+    CONF_SECRET_TOKEN,
     CONF_VERIFICATION_TOKEN,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
     USER_PROFILE_COORDINATOR,
-    VERIFICATION_TOKENS,
     ZOOM_SCHEMA,
 )
 
 _LOGGER = getLogger(__name__)
 
 
-def ensure_multiple_have_names(value: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def ensure_all_have_unique_names(value: list[dict[str, str]]) -> list[dict[str, str]]:
     """Validate that for multiple entries, they have names."""
-    if len({entry[CONF_NAME] for entry in value}) != len(value):
+    if len({entry[CONF_NAME] for entry in value}) != len(value) or len(value) != len(
+        set(value)
+    ):
         raise vol.Invalid(
             "You must provide a unique name for each Zoom app when providing "
             "multiple sets of application credentials."
@@ -51,12 +54,30 @@ def ensure_multiple_have_names(value: List[Dict[str, str]]) -> List[Dict[str, st
     return value
 
 
+SCHEMA = ZOOM_SCHEMA.schema
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [ZOOM_SCHEMA], ensure_multiple_have_names)},
+    {
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [vol.Schema(vol.All(cv.deprecated(CONF_VERIFICATION_TOKEN), SCHEMA))],
+            ensure_all_have_unique_names,
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR]
+
+
+def remove_verification_token_from_entry(
+    hass: HomeAssistant, entry: ConfigEntry, secret_token: str | None = None
+) -> None:
+    """Remove the verification token from the config entry."""
+    new_data = deepcopy(entry.data)
+    new_data.pop(CONF_VERIFICATION_TOKEN)
+    if secret_token:
+        new_data[CONF_SECRET_TOKEN] = secret_token
+    hass.config_entries.async_update_entry(entry, data=new_data)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):
@@ -77,17 +98,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
                 app[CONF_CLIENT_SECRET],
                 OAUTH2_AUTHORIZE,
                 OAUTH2_TOKEN,
-                app[CONF_VERIFICATION_TOKEN],
+                app[CONF_SECRET_TOKEN],
                 app[CONF_NAME],
             ),
         )
+
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if (
+                entry.data[CONF_CLIENT_ID] == app[CONF_CLIENT_ID]
+                and entry.data[CONF_CLIENT_SECRET] == app[CONF_CLIENT_SECRET]
+                and CONF_VERIFICATION_TOKEN in entry.data
+            ):
+                remove_verification_token_from_entry(
+                    hass, entry, app[CONF_SECRET_TOKEN]
+                )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Zoom from a config entry."""
-    hass.data.setdefault(DOMAIN, {}).setdefault(VERIFICATION_TOKENS, set())
+    if CONF_VERIFICATION_TOKEN in entry.data:
+        if CONF_SECRET_TOKEN not in entry.data:
+            _LOGGER.error(
+                "Zoom has moved to a new token type for verification, please reconfigure "
+                "this config entry with the secret token. To learn how to update your Zoom app "
+                "to support this change, check the integration repo's README."
+            )
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_REAUTH, "unique_id": entry.unique_id},
+                    data=entry.data,
+                )
+            )
+            return False
+
+        remove_verification_token_from_entry(hass, entry)
+
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(entry.entry_id, {})
     try:
         implementation = (
@@ -103,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             entry.data[CONF_CLIENT_SECRET],
             OAUTH2_AUTHORIZE,
             OAUTH2_TOKEN,
-            entry.data[CONF_VERIFICATION_TOKEN],
+            entry.data[CONF_SECRET_TOKEN],
             entry.data[CONF_NAME],
         )
         ZoomOAuth2FlowHandler.async_register_implementation(hass, implementation)
@@ -113,7 +162,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_refresh()
     hass.data[DOMAIN][entry.entry_id][USER_PROFILE_COORDINATOR] = coordinator
     hass.data[DOMAIN][entry.entry_id][API] = api
-    hass.data[DOMAIN][VERIFICATION_TOKENS].add(entry.data[CONF_VERIFICATION_TOKEN])
 
     try:
         my_profile = await api.async_get_my_user_profile()

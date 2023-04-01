@@ -1,12 +1,16 @@
 """Common classes and functions for Zoom."""
+from __future__ import annotations
 
 from datetime import timedelta
+import hashlib
+import hmac
 from http import HTTPStatus
 from logging import getLogger
-from typing import Any, Dict, List
+from typing import Any
 
-from aiohttp.web import Request, Response
+from aiohttp.web import Request, Response, json_response
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -14,14 +18,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import ZoomAPI
 from .const import (
+    ATTR_EVENT,
+    ATTR_PAYLOAD,
+    CONF_SECRET_TOKEN,
     DOMAIN,
     HA_URL,
     HA_ZOOM_EVENT,
-    VERIFICATION_TOKENS,
+    VALIDATION_EVENT,
     WEBHOOK_RESPONSE_SCHEMA,
 )
 
 _LOGGER = getLogger(__name__)
+
+UNKNOWN_EVENT_MSG = "Received data that doesn't look like a Zoom webhook event"
 
 
 def valid_external_url(hass: HomeAssistant) -> bool:
@@ -67,11 +76,11 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         client_secret: str,
         authorize_url: str,
         token_url: str,
-        verification_token: str,
+        secret_token: str,
         name: str,
     ) -> None:
         """Initialize local auth implementation."""
-        self._verification_token = verification_token
+        self._secret_token = secret_token
         self._name = name
         super().__init__(
             hass, domain, client_id, client_secret, authorize_url, token_url
@@ -94,6 +103,25 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         return f"{url}{config_entry_oauth2_flow.AUTH_CALLBACK_PATH}"
 
 
+def _get_hashed_hex_msg(key: str, message: str) -> str:
+    """Generate a HMAC hashed message in hex for a Zoom webhook request."""
+    hmac_ = hmac.new(key.encode(), message.encode(), hashlib.sha256)
+    return hmac_.hexdigest()
+
+
+def _find_entry_with_signature(
+    hass: HomeAssistant, signature: str, signature_msg: str
+) -> tuple[ConfigEntry | None, str | None]:
+    """Find config entry with signature if it exists."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        secret_token = entry.data.get(CONF_SECRET_TOKEN)
+        if secret_token and hmac.compare_digest(
+            f"v0={_get_hashed_hex_msg(str(secret_token), signature_msg)}", signature
+        ):
+            return entry, str(secret_token)
+    return None, None
+
+
 class ZoomWebhookRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
 
@@ -104,32 +132,71 @@ class ZoomWebhookRequestView(HomeAssistantView):
 
     async def post(self, request: Request) -> Response:
         """Respond to requests from the device."""
-        hass = request.app["hass"]
+        text = await request.text()
+        hass: HomeAssistant = request.app["hass"]
         headers = request.headers
-        verification_tokens = hass.data.get(DOMAIN, {}).get(VERIFICATION_TOKENS, set())
-        tokens = headers.getall("authorization")
 
-        for token in tokens:
-            if not verification_tokens or (token and token in verification_tokens):
-                try:
-                    data = await request.json()
-                    status = WEBHOOK_RESPONSE_SCHEMA(data)
-                    _LOGGER.debug("Received event: %s", status)
-                    hass.bus.async_fire(f"{HA_ZOOM_EVENT}", {**status, "token": token})
-                except Exception as err:
-                    _LOGGER.warning(
-                        "Received authorized event but unable to parse: %s (%s)",
-                        await request.text(),
-                        err,
-                    )
-                return Response(status=HTTPStatus.OK)
+        # If either Zoom header is missing, this is not a valid webhook request
+        if not (
+            (signature := headers.get("x-zm-signature"))
+            and (timestamp := headers.get("x-zm-request-timestamp"))
+        ):
+            _LOGGER.info("%s: %s (Headers: %s)", UNKNOWN_EVENT_MSG, text, headers)
+            return Response(status=HTTPStatus.OK)
 
-        _LOGGER.warning(
-            "Received unauthorized request: %s (Headers: %s)",
-            await request.text(),
-            request.headers,
+        try:
+            data = await request.json()
+            status = WEBHOOK_RESPONSE_SCHEMA(data)
+        except Exception as err:
+            _LOGGER.info(
+                "%s: %s (Headers: %s) (Error: %s)",
+                UNKNOWN_EVENT_MSG,
+                text,
+                headers,
+                err,
+            )
+            return Response(status=HTTPStatus.OK)
+
+        # Find the first config entry where the secret token can be used to
+        # match the signature header from the webhook validation request
+        entry, secret_token = _find_entry_with_signature(
+            hass, signature, f"v0:{timestamp}:{text}"
         )
-        return Response(status=HTTPStatus.OK)
+
+        # This means that we do not have a config entry with the correct secret token
+        if not entry:
+            # if we get here, there was no found config entry with a matching secret
+            # token and we have to fail the validation request. We still respond with
+            # a 200 status code so we don't leak information about this endpoint.
+            _LOGGER.warning(
+                "Received Zoom webhook request that doesn't match any config entries'"
+                "secret token. Ensure you have configured the Zoom integration with "
+                "the correct secret token."
+            )
+            return Response(status=HTTPStatus.OK)
+        assert secret_token
+
+        # Pass events that are not webhook validation requests on to the integration
+        if status[ATTR_EVENT] != VALIDATION_EVENT:
+            _LOGGER.debug(
+                "Received validated Zoom event for config entry %s: %s",
+                entry.entry_id,
+                status,
+            )
+            hass.bus.async_fire(
+                f"{HA_ZOOM_EVENT}", {**status, "ha_config_entry_id": entry.entry_id}
+            )
+            return Response(status=HTTPStatus.OK)
+
+        # Handle webhook validation request
+        plain_token = status[ATTR_PAYLOAD]["plainToken"]
+        _LOGGER.debug("Received Zoom webhook validation request: %s", data)
+        return json_response(
+            {
+                "plainToken": plain_token,
+                "encryptedToken": _get_hashed_hex_msg(secret_token, plain_token),
+            }
+        )
 
 
 class ZoomUserProfileDataUpdateCoordinator(DataUpdateCoordinator):
@@ -146,7 +213,7 @@ class ZoomUserProfileDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self._api = api
 
-    async def _async_update_data(self) -> Dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
             return await self._api.async_get_my_user_profile()
@@ -154,11 +221,11 @@ class ZoomUserProfileDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed from err
 
 
-class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
-    """Define an object to hold Zoom Contact List data."""
+class ZoomContactlistDataUpdateCoordinator(DataUpdateCoordinator):
+    """Define an object to hold Zoom Contact list data."""
 
     def __init__(
-        self, hass: HomeAssistant, api: ZoomAPI, contact_types: List[str] = ["external"]
+        self, hass: HomeAssistant, api: ZoomAPI, contact_types: list[str] = ["external"]
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -171,7 +238,7 @@ class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
         self._api = api
         self._contact_types = contact_types
 
-    async def _async_update_data(self) -> List[Dict[str, str]]:
+    async def _async_update_data(self) -> list[dict[str, str]]:
         """Update data via library."""
         try:
             return await self._api.async_get_contacts(self._contact_types)

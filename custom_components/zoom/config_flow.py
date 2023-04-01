@@ -1,7 +1,8 @@
 """Config flow for Zoom Automation."""
+from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
@@ -14,6 +15,7 @@ from .common import ZoomOAuth2Implementation, valid_external_url
 from .const import (
     ALL_CONNECTIVITY_STATUSES,
     CONF_CONNECTIVITY_ON_STATUSES,
+    CONF_SECRET_TOKEN,
     CONF_VERIFICATION_TOKEN,
     DEFAULT_NAME,
     DOMAIN,
@@ -33,8 +35,8 @@ class ZoomOptionsFlow(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Manage the zoom options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -83,8 +85,8 @@ class ZoomOAuth2FlowHandler(
         super().__init__()
 
     async def async_step_user(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Handle a flow start."""
         assert self.hass
 
@@ -97,7 +99,10 @@ class ZoomOAuth2FlowHandler(
                 self.hass, self.DOMAIN
             )
         ):
-            return self.async_show_form(step_id="user", data_schema=ZOOM_SCHEMA)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=ZOOM_SCHEMA,
+            )
 
         if user_input:
             await self.async_set_unique_id(
@@ -113,7 +118,7 @@ class ZoomOAuth2FlowHandler(
                     user_input[CONF_CLIENT_SECRET],
                     OAUTH2_AUTHORIZE,
                     OAUTH2_TOKEN,
-                    user_input[CONF_VERIFICATION_TOKEN],
+                    user_input[CONF_SECRET_TOKEN],
                     user_input[CONF_NAME],
                 ),
             )
@@ -121,20 +126,37 @@ class ZoomOAuth2FlowHandler(
         return await self.async_step_pick_implementation()
 
     async def async_step_reauth(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Perform reauth when OAuth token is invalid."""
         self._stored_data = {
             CONF_NAME: user_input[CONF_NAME],
             CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
             CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
-            CONF_VERIFICATION_TOKEN: user_input[CONF_VERIFICATION_TOKEN],
         }
+        if CONF_VERIFICATION_TOKEN in user_input:
+            return await self.async_step_reauth_secret_token(user_input)
+
+        self._stored_data[CONF_SECRET_TOKEN] = user_input[CONF_SECRET_TOKEN]
         return await self.async_step_reauth_confirm()
 
+    async def async_step_secret_token(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Confirm reauth."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_secret_token",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_SECRET_TOKEN): vol.Coerce(str)}
+                ),
+            )
+        self._stored_data[CONF_SECRET_TOKEN] = user_input[CONF_SECRET_TOKEN]
+        return await self.async_step_user()
+
     async def async_step_reauth_confirm(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Confirm reauth."""
         if user_input is None:
             return self.async_show_form(
@@ -143,8 +165,8 @@ class ZoomOAuth2FlowHandler(
         return await self.async_step_user()
 
     async def async_step_choose_name(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Require users to choose a name for each entry."""
         if not user_input:
             return self.async_show_form(
@@ -161,8 +183,8 @@ class ZoomOAuth2FlowHandler(
         return await self.async_oauth_create_entry(self._stored_data)
 
     async def async_oauth_create_entry(
-        self, data: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, data: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Create an entry for the flow."""
         # Update existing entry if performing reauth
         if self.source == config_entries.SOURCE_REAUTH:
@@ -185,7 +207,7 @@ class ZoomOAuth2FlowHandler(
                 CONF_NAME: name,
                 CONF_CLIENT_ID: self.flow_impl.client_id,
                 CONF_CLIENT_SECRET: self.flow_impl.client_secret,
-                CONF_VERIFICATION_TOKEN: self.flow_impl._verification_token,
+                CONF_SECRET_TOKEN: self.flow_impl._secret_token,
             }
         )
         if not self.unique_id:

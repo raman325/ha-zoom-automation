@@ -7,7 +7,7 @@
                     "name": "Nome da conta",
                     "client_id": "ID do cliente (obtido do aplicativo Zoom)",
                     "client_secret": "Segredo do cliente (obtido do aplicativo Zoom)",
-                    "verification_token": "Token de verificação (obtido na seção Recursos do aplicativo Zoom personalizado)"
+                    "secret_token": "Token de verificação (obtido na seção Recurso do aplicativo Zoom personalizado)"
                 }
             },
             "choose_name": {
@@ -25,6 +25,10 @@
             "reauth_confirm": {
                 "title": "Reautenticar Integração",
                 "description": "A integração do Zoom precisa autenticar novamente sua conta"
+            },
+            "reauth_secret_token": {
+                "title": "Update entry to include secret token",
+                "description": "The Zoom integration uses secret tokens instead of the deprecated verification token. Please enter your secret token below. If you are unsure what the secret token is or how to get it, check the integration README."
             }
         },
         "abort": {
