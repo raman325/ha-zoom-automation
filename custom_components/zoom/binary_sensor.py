@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import Event
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -27,7 +27,6 @@ from .const import (
     API,
     ATTR_EVENT,
     CONF_CONNECTIVITY_ON_STATUSES,
-    CONF_SECRET_TOKEN,
     CONNECTIVITY_EVENT,
     CONNECTIVITY_ID,
     CONNECTIVITY_STATUS,
