@@ -46,13 +46,14 @@ CONNECTIVITY_ID = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_ID]
 VALIDATION_EVENT = "endpoint.url_validation"
 
 ALL_CONNECTIVITY_STATUSES = [
-    "In_Meeting",
-    "Presenting",
-    "On_Phone_Call",
-    "In_Calendar_Event",
     "Available",
     "Away",
     "Do_Not_Disturb",
+    "In_Calendar_Event",
+    "In_Meeting",
+    "Offline",
+    "On_Phone_Call",
+    "Presenting",
 ]
 DEFAULT_CONNECTIVITY_ON_STATUSES = ["In_Meeting", "Presenting", "On_Phone_Call"]
 
