@@ -5,7 +5,13 @@ from typing import Dict, List
 from aiohttp.client_exceptions import ClientResponseError
 from aiohttp.web_exceptions import HTTPUnauthorized
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ID, CONF_NAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_ID,
+    CONF_NAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -49,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):
