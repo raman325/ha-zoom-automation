@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from aiohttp.web import HTTPUnauthorized
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -81,7 +81,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         self._zoom_event_state = None
         self._state = STATE_OFF
 
-        self._attr_device_class = DEVICE_CLASS_CONNECTIVITY
+        self._attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
         self._attr_unique_id = f"{DOMAIN}_{slugify(self._name)}"
         self._attr_available = True
         self._attr_should_poll = False
