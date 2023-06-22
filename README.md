@@ -35,7 +35,7 @@ Because the event name is included in the JSON payload sent to the webhook, you 
 
 Your Home Assistant instance must be externally accessible from the Internet. The `External URL` will also need to be appropriately set and should replace `<BASE_HA_URL>` references in the installation instructions. You can do this in your `configuration.yaml` or through the UI as mention [in the docs](https://www.home-assistant.io/docs/configuration/basic/).
 
-## Installation (Single Account Monitoring)
+## Installation (Single AccounzRMonitoring)
 
 > NOTE: If you want to monitor multiple Zoom accounts, skip to the next set of installation instructions
 
@@ -60,7 +60,7 @@ You will get a binary sensor out of the box:
 3. Enter an application name of your choice, select `User-managed app`, deselect `Would you like to publish this app on Zoom App Marketplace?`, and then click on `Create`.
 4. Copy your `Client ID` and `Client Secret` somewhere as you will need them later to configure Home Assistant.
 5. Enter the following `Redirect URL for OAuth`: `<BASE_HA_URL>/auth/external/callback` (replace `<BASE_HA_URL>` with the URL you configured inside of Home Assistant as the external URL, e.g. `https://ha.example.com`)
-6. Enter your `<BASE_HA_URL>` in the `Whitelist URL` section, then hit `Continue`.
+6. Enter your `<BASE_HA_URL>` in the `Add Allow List` section, then hit `Continue`.
 7. The `App Name` should already be filled out. A `Short Description` and `Long Description` are required, but since this app is only for you, it doesn't matter what you enter here. You will also need to add a `Name` and `Email Address` in the `Developer Contact Information` section. Click `Continue` once you are done.
 8. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
 9. Enter a name for this subscription (does not matter).
