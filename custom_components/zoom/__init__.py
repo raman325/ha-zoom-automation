@@ -1,4 +1,5 @@
 """The Zoom integration."""
+
 from logging import getLogger
 from typing import Dict, List
 

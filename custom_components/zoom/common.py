@@ -1,4 +1,5 @@
 """Common classes and functions for Zoom."""
+
 from datetime import timedelta
 from http import HTTPStatus
 from logging import getLogger

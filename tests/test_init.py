@@ -1,4 +1,5 @@
 """Test zoom init."""
+
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import DATA_IMPLEMENTATIONS

@@ -1,4 +1,5 @@
 """API for Zoom Automation bound to Home Assistant OAuth."""
+
 import logging
 from typing import Any, Dict, List, Optional
 

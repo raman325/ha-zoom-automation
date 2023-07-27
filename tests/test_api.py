@@ -1,4 +1,5 @@
 """Test zoom API."""
+
 from http import HTTPStatus
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET

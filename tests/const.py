@@ -1,4 +1,5 @@
 """Constants for zoom tests."""
+
 from datetime import timedelta
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME

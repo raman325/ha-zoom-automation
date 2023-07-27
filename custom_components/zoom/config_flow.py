@@ -1,4 +1,5 @@
 """Config flow for Zoom Automation."""
+
 import logging
 from typing import Any, Dict, Optional
 

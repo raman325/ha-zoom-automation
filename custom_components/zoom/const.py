@@ -1,4 +1,5 @@
 """Constants for the Zoom integration."""
+
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
 from homeassistant.helpers.config_validation import string
 import voluptuous as vol

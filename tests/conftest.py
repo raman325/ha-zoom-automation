@@ -1,4 +1,5 @@
 """Fixtures for zoom tests."""
+
 from pytest import fixture
 from pytest_homeassistant_custom_component.async_mock import patch
 
