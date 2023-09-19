@@ -4,8 +4,8 @@
     "codeowners": ["@raman325"],
     "config_flow": true,
     "dependencies": ["http", "auth"],
-    "documentation": "https://github.com/raman325/ha-zoom-automation",
     "iot_class": "cloud_push",
+    "documentation": "https://github.com/raman325/ha-zoom-automation",
     "issue_tracker": "https://github.com/raman325/ha-zoom-automation/issues",
     "version": "v0.0.0"
 }
