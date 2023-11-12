@@ -1,6 +1,7 @@
 """The Zoom integration."""
 from __future__ import annotations
 
+from copy import deepcopy
 from logging import getLogger
 
 from aiohttp.client_exceptions import ClientResponseError
@@ -40,23 +41,11 @@ from .const import (
 _LOGGER = getLogger(__name__)
 
 
-def error_on_verification_token(value: list[dict[str, str]]) -> list[dict[str, str]]:
-    """Validate that the verification token is not present."""
-    for app in value:
-        if CONF_VERIFICATION_TOKEN in app:
-            raise vol.Invalid(
-                "Zoom has moved to a new token type for verification, please remove "
-                "the verification token from your config and add the secret token. To "
-                "learn how to update your Zoom app to support this change, check the "
-                "integration repo's README."
-            )
-
-    return value
-
-
 def ensure_all_have_unique_names(value: list[dict[str, str]]) -> list[dict[str, str]]:
     """Validate that for multiple entries, they have names."""
-    if len({entry[CONF_NAME] for entry in value}) != len(value):
+    if len({entry[CONF_NAME] for entry in value}) != len(value) or len(value) != len(
+        set(value)
+    ):
         raise vol.Invalid(
             "You must provide a unique name for each Zoom app when providing "
             "multiple sets of application credentials."
@@ -65,12 +54,12 @@ def ensure_all_have_unique_names(value: list[dict[str, str]]) -> list[dict[str, 
     return value
 
 
+SCHEMA = ZOOM_SCHEMA.schema
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
-            [ZOOM_SCHEMA],
-            error_on_verification_token,
+            [vol.Schema(vol.All(cv.deprecated(CONF_VERIFICATION_TOKEN), SCHEMA))],
             ensure_all_have_unique_names,
         )
     },
@@ -84,7 +73,7 @@ def remove_verification_token_from_entry(
     hass: HomeAssistant, entry: ConfigEntry, secret_token: str | None = None
 ) -> None:
     """Remove the verification token from the config entry."""
-    new_data = (entry.data).copy()
+    new_data = deepcopy(entry.data)
     new_data.pop(CONF_VERIFICATION_TOKEN)
     if secret_token:
         new_data[CONF_SECRET_TOKEN] = secret_token
