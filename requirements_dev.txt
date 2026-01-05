@@ -1,0 +1,2 @@
+# Install dev dependencies from pyproject.toml
+-e ".[dev]"
