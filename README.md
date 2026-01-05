@@ -46,6 +46,15 @@ Zoom has specific requirements for webhook endpoints ([see docs](https://develop
 
 > **Troubleshooting**: If your Home Assistant instance experiences downtime for more than 72 hours, or if you've just upgraded from a version that used `verification_token` to one that uses `secret_token`, you may need to disable and re-enable Event Subscriptions in your Zoom app's `Features` section to trigger revalidation.
 
+### Migrating from verification_token to secret_token
+
+Zoom has deprecated verification tokens in favor of secret tokens with HMAC signature validation. If you're upgrading from an older version of this integration:
+
+1. Get your `Secret Token` from your Zoom app under `Features` > `Access`
+2. **If using configuration.yaml**: Manually replace `verification_token` with `secret_token` in your config file and restart Home Assistant
+3. **If using UI-only setup**: The integration will prompt you to enter your secret token during reauth
+4. After updating, you may need to disable and re-enable Event Subscriptions in Zoom to trigger revalidation
+
 ## Installation (Single AccounzRMonitoring)
 
 > NOTE: If you want to monitor multiple Zoom accounts, skip to the next set of installation instructions

@@ -28,7 +28,7 @@
             },
             "reauth_secret_token": {
                 "title": "Update entry to include secret token",
-                "description": "The Zoom integration uses secret tokens instead of the deprecated verification token. Please enter your secret token below. If you are unsure what the secret token is or how to get it, check the integration README."
+                "description": "The Zoom integration uses secret tokens instead of the deprecated verification token. Please enter your secret token below. If you are unsure what the secret token is or how to get it, check the integration README. Note: If your credentials are in configuration.yaml, you must manually update that file to use `secret_token` instead of `verification_token`."
             }
         },
         "abort": {
