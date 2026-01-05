@@ -33,7 +33,18 @@ Because the event name is included in the JSON payload sent to the webhook, you 
 
 ## Pre-Requisites
 
-Your Home Assistant instance must be externally accessible from the Internet. The `External URL` will also need to be appropriately set and should replace `<BASE_HA_URL>` references in the installation instructions. You can do this in your `configuration.yaml` or through the UI as mention [in the docs](https://www.home-assistant.io/docs/configuration/basic/).
+Your Home Assistant instance must be externally accessible from the Internet. The `External URL` will also need to be appropriately set and should replace `<BASE_HA_URL>` references in the installation instructions. You can do this in your `configuration.yaml` or through the UI as mentioned [in the docs](https://www.home-assistant.io/docs/configuration/basic/).
+
+### Zoom Webhook Requirements
+
+Zoom has specific requirements for webhook endpoints ([see docs](https://developers.zoom.us/docs/api/webhooks/#validate-your-webhook-endpoint)):
+
+- **HTTPS required**: Your Home Assistant must be accessible via HTTPS with TLSv1.2+ and a valid certificate
+- **3-second response deadline**: Zoom expects a response within 3 seconds. If your HA instance is slow to respond, webhooks may fail
+- **72-hour revalidation**: Zoom automatically revalidates your endpoint every 72 hours
+- **Retry policy**: Failed webhook deliveries are retried at 5 min, 20 min, and 60 min intervals. After 3 failures, no further webhooks for that event will be sent until revalidation succeeds
+
+> **Troubleshooting**: If your Home Assistant instance experiences downtime for more than 72 hours, or if you've just upgraded from a version that used `verification_token` to one that uses `secret_token`, you may need to disable and re-enable Event Subscriptions in your Zoom app's `Features` section to trigger revalidation.
 
 ## Installation (Single AccounzRMonitoring)
 
