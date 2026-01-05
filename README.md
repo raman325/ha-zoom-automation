@@ -66,7 +66,7 @@ You will get a binary sensor out of the box:
 9. Enter a name for this subscription (does not matter).
 10. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/zoom`.
 11. Now click on `Add events`. From this menu, you can choose what events you want to subscribe to. To use the `binary_sensor` provided by the integration, you would go to the `User Activity` event type and check the box next to `User's presence status has been updated`. If you want to get more details about when you start a meeting, add `Start Meeting` under `Meeting`.
-12. Make note of the `Verification Token` on the `Feature` page as you will need it for your configuration later.
+12. Make note of the `Secret Token` found under `Features` > `Access` as you will need it for your configuration later.
 13. Once you are done, click `Done`, then `Save` the subscription before hitting `Continue`.
 14. The `Scopes` section should have already be updated to include at least one permission based on the events you choose to monitor. If you want to use the `binary_sensor`, you will need to add another scope so that the initial status of your sensor is set correctly, otherwise the integration will naively restore your last state on restart. To do this, click `Add Scopes` in the top right of the main page, go to the `Team Chat` section, enable the checkbox next to `View current user's team chat contact information` (the scope is called `chat_contact:read`) and click `Done`. Click `Continue` to save what you did.
 15. You are now ready to configure Home Assistant!
@@ -83,7 +83,7 @@ You can either do the initial setup through the UI or in your `configuration.yam
 
 1. Click Install
 2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom". Select it.
-3. You will be asked to provide the `Client ID` and `Client Secret` that Zoom gave you earlier as well as the `Verification Token` as you grabbed from Zoom in the earlier section. Enter them in and click Submit.
+3. You will be asked to provide the `Client ID` and `Client Secret` that Zoom gave you earlier as well as the `Secret Token` you grabbed from Zoom in the earlier section. Enter them in and click Submit.
 4. Skip to "Finish Setup" section below
 
 #### Using configuration.yaml
@@ -93,8 +93,8 @@ You can either do the initial setup through the UI or in your `configuration.yam
 ```yaml
 zoom:
     client_id: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
-    client_secret: <CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
-    verification_token: <VERIFICATION_TOKEN_FROM_THE_FEATURE_PAGE_OF_YOUR_CUSTOM_ZOOM_APP>
+    client_secret: <CLIENT_SECRET_FROM_YOUR_CUSTOM_ZOOM_APP>
+    secret_token: <SECRET_TOKEN_FROM_FEATURES_ACCESS_IN_YOUR_CUSTOM_ZOOM_APP>
 ```
 3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom". Select it.
 4. Skip to "Finish Setup" section below
@@ -135,7 +135,7 @@ You will get a binary sensor out of the box:
 5. Enter the following `Redirect URL for OAuth`: `<BASE_HA_URL>/auth/external/callback` (replace `<BASE_HA_URL>` with the URL you configured inside of Home Assistant as the external URL, e.g. `https://ha.example.com`)
 6. Enter your `<BASE_HA_URL>` in the `Whitelist URL` section, then hit `Continue`.
 7. The `App Name` should already be filled out. A `Short Description` and `Long Description` are required, but since this app is only for you, it doesn't matter what you enter here. You will also need to add a `Name` and `Email Address` in the `Developer Contact Information` section. Click `Continue` once you are done.
-8. Make note of the `Verification Token` on the `Feature` page as you will need it for your configuration later.
+8. Make note of the `Secret Token` found under `Features` > `Access` as you will need it for your configuration later.
 9. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
 10. Enter a name for this subscription (does not matter).
 11. Your `Event notification endpoint URL` should be set to `<BASE_HA_URL>/api/zoom`.
@@ -157,12 +157,12 @@ You can either do the initial setup through the UI or in your `configuration.yam
 ```yaml
 zoom:
   - client_id: <ACCOUNT1_CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
-    client_secret: <ACCOUNT1_CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
-    verification_token: <ACCOUNT1_VERIFICATION_TOKEN_FROM_THE_FEATURE_PAGE_OF_YOUR_CUSTOM_ZOOM_APP>
+    client_secret: <ACCOUNT1_CLIENT_SECRET_FROM_YOUR_CUSTOM_ZOOM_APP>
+    secret_token: <ACCOUNT1_SECRET_TOKEN_FROM_FEATURES_ACCESS>
     name: ACCOUNT1 (make sure you use a name that will make it easy for you to know which Zoom account to log into later)
   - client_id: <ACCOUNT2_CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
-    client_secret: <ACCOUNT2_CLIENT_ID_FROM_YOUR_CUSTOM_ZOOM_APP>
-    verification_token: <ACCOUNT2_VERIFICATION_TOKEN_FROM_THE_FEATURE_PAGE_OF_YOUR_CUSTOM_ZOOM_APP>
+    client_secret: <ACCOUNT2_CLIENT_SECRET_FROM_YOUR_CUSTOM_ZOOM_APP>
+    secret_token: <ACCOUNT2_SECRET_TOKEN_FROM_FEATURES_ACCESS>
     name: ACCOUNT2 (make sure you use a name that will make it easy for you to know which Zoom account to log into later)
 ```
 3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Zoom". Select it.
