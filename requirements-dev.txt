@@ -1,4 +1,4 @@
-aiohttp==3.9.4
+aiohttp==3.12.14
 aiohttp_cors==0.7.0
 black==24.3.0
 codecov==2.1.10
