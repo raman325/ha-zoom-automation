@@ -1,7 +1,9 @@
 """Fixtures for zoom tests."""
+from unittest.mock import patch
 
 from pytest import fixture
-from pytest_homeassistant_custom_component.async_mock import patch
+
+pytest_plugins = "pytest_homeassistant_custom_component"
 
 
 @fixture(name="external_url", autouse=True)
