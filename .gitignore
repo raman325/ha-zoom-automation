@@ -1,4 +1,12 @@
 venv
+.venv
 __pycache__
 .coverage
 .pytest_cache
+
+# AI assistants
+.claude/
+.cursor/
+.aider*
+.continue/
+.copilot/
