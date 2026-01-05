@@ -27,7 +27,9 @@ ZOOM_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): vol.Coerce(str),
         vol.Required(CONF_CLIENT_ID): vol.Coerce(str),
         vol.Required(CONF_CLIENT_SECRET): vol.Coerce(str),
-        vol.Required(CONF_SECRET_TOKEN): vol.Coerce(str),
+        # secret_token is preferred; verification_token is deprecated but supported for migration
+        vol.Optional(CONF_SECRET_TOKEN): vol.Coerce(str),
+        vol.Optional(CONF_VERIFICATION_TOKEN): vol.Coerce(str),
     },
     extra=vol.ALLOW_EXTRA,
 )

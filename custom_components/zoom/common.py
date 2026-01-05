@@ -79,7 +79,7 @@ class ZoomOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementatio
         client_secret: str,
         authorize_url: str,
         token_url: str,
-        secret_token: str,
+        secret_token: str | None,
         name: str,
     ) -> None:
         """Initialize local auth implementation."""

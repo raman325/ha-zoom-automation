@@ -57,7 +57,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
-            [vol.Schema(vol.All(cv.deprecated(CONF_VERIFICATION_TOKEN), SCHEMA))],
+            [SCHEMA],
             ensure_all_have_unique_names,
         )
     },
@@ -87,6 +87,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
         return False
 
     for app in config[DOMAIN]:
+        # Get secret_token from YAML, falling back to None if only verification_token exists
+        secret_token = app.get(CONF_SECRET_TOKEN)
+
+        if not secret_token and CONF_VERIFICATION_TOKEN in app:
+            _LOGGER.warning(
+                "Zoom app '%s' is using deprecated 'verification_token'. "
+                "Please update your configuration.yaml to use 'secret_token' instead. "
+                "You can find your Secret Token under Features > Access in your Zoom app. "
+                "Webhook validation will not work until you update to secret_token.",
+                app[CONF_NAME],
+            )
+
         ZoomOAuth2FlowHandler.async_register_implementation(
             hass,
             ZoomOAuth2Implementation(
@@ -96,20 +108,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
                 app[CONF_CLIENT_SECRET],
                 OAUTH2_AUTHORIZE,
                 OAUTH2_TOKEN,
-                app[CONF_SECRET_TOKEN],
+                secret_token,
                 app[CONF_NAME],
             ),
         )
 
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if (
-                entry.data[CONF_CLIENT_ID] == app[CONF_CLIENT_ID]
-                and entry.data[CONF_CLIENT_SECRET] == app[CONF_CLIENT_SECRET]
-                and CONF_VERIFICATION_TOKEN in entry.data
-            ):
-                remove_verification_token_from_entry(
-                    hass, entry, app[CONF_SECRET_TOKEN]
-                )
+        # If YAML has secret_token, migrate any matching config entries
+        if secret_token:
+            for entry in hass.config_entries.async_entries(DOMAIN):
+                if (
+                    entry.data[CONF_CLIENT_ID] == app[CONF_CLIENT_ID]
+                    and entry.data[CONF_CLIENT_SECRET] == app[CONF_CLIENT_SECRET]
+                ):
+                    # Migrate entry if it has verification_token or missing secret_token
+                    if (
+                        CONF_VERIFICATION_TOKEN in entry.data
+                        or CONF_SECRET_TOKEN not in entry.data
+                        or entry.data.get(CONF_SECRET_TOKEN) != secret_token
+                    ):
+                        _LOGGER.info(
+                            "Migrating Zoom config entry '%s' with secret_token from YAML",
+                            entry.title,
+                        )
+                        remove_verification_token_from_entry(hass, entry, secret_token)
+                        # Also update version if needed
+                        if entry.version < 2:
+                            hass.config_entries.async_update_entry(entry, version=2)
 
     return True
 
