@@ -1,7 +1,7 @@
 {
     "name": "Zoom",
     "render_readme": true,
-    "homeassistant": "2021.5.0b0",
+    "homeassistant": "2025.9.0b0",
     "zip_release": true,
     "filename": "zoom.zip"
 }
