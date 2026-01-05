@@ -28,7 +28,10 @@
             },
             "reauth_secret_token": {
                 "title": "Atualizar entrada para incluir token secreto",
-                "description": "A integração do Zoom usa tokens secretos em vez do token de verificação obsoleto. Por favor, insira seu token secreto abaixo. Se você não tem certeza do que é o token secreto ou como obtê-lo, consulte o README da integração. Nota: Se suas credenciais estão no configuration.yaml, você deve atualizar manualmente esse arquivo para usar `secret_token` em vez de `verification_token`."
+                "description": "A integração do Zoom agora usa tokens secretos em vez do token de verificação obsoleto. Por favor, insira seu Token Secreto (encontrado em Recursos > Acesso no seu aplicativo Zoom).",
+                "data": {
+                    "secret_token": "Token Secreto"
+                }
             }
         },
         "abort": {
@@ -36,7 +39,8 @@
             "missing_configuration": "O componente não está configurado. Por favor, siga a documentação.",
             "authorize_url_timeout": "Tempo limite gerando URL de autorização.",
             "no_external_url": "Você não tem um URL externo para sua instância do Home Assistant configurado, o que é necessário para configurar a integração do Zoom. Você precisa definir a `external_url` no `homeassistant` no seu `configuration.yaml`, ou defina a `URL Externa` no Home Assistant em `Configurações - Geral`, antes de tentar configurar a integração do Zoom novamente. Você pode aprender mais sobre como configurar este parâmetro [aqui](https://www.home-assistant.io/docs/configuration/basic)",
-            "reauth_successful": "A reautenticação foi bem-sucedida"
+            "reauth_successful": "A reautenticação foi bem-sucedida",
+            "yaml_update_required": "Suas credenciais do Zoom estão configuradas no configuration.yaml. Por favor, atualize seu configuration.yaml para substituir `verification_token` por `secret_token` (encontrado em Recursos > Acesso no seu aplicativo Zoom) e reinicie o Home Assistant."
         },
         "create_entry": {
             "default": "Autenticado com sucesso"

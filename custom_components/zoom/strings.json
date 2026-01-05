@@ -28,7 +28,10 @@
             },
             "reauth_secret_token": {
                 "title": "Update entry to include secret token",
-                "description": "The Zoom integration uses secret tokens instead of the deprecated verification token. Please enter your secret token below. If you are unsure what the secret token is or how to get it, check the integration README. Note: If your credentials are in configuration.yaml, you must manually update that file to use `secret_token` instead of `verification_token`."
+                "description": "The Zoom integration now uses secret tokens instead of the deprecated verification token. Please enter your Secret Token (found under Features > Access in your Zoom app).",
+                "data": {
+                    "secret_token": "Secret Token"
+                }
             }
         },
         "abort": {
@@ -36,7 +39,8 @@
             "missing_configuration": "The component is not configured. Please follow the documentation.",
             "authorize_url_timeout": "Timeout generating authorize URL.",
             "no_external_url": "You do not have an external URL for your Home Assistant instance configured which is needed to set up the Zoom integration. You need to set the `external_url` property in the `homeassistant` section of your `configuration.yaml`, or set the `External URL` property in the Home Assistant `General Configuration` UI, before trying to setup the Zoom integration again. You can learn more about configuring this parameter [here](https://www.home-assistant.io/docs/configuration/basic)",
-            "reauth_successful": "Re-authentication was successful"
+            "reauth_successful": "Re-authentication was successful",
+            "yaml_update_required": "Your Zoom credentials are configured in configuration.yaml. Please update your configuration.yaml to replace `verification_token` with `secret_token` (found under Features > Access in your Zoom app), then restart Home Assistant."
         },
         "create_entry": {
             "default": "Successfully authenticated"

@@ -135,6 +135,20 @@ class ZoomOAuth2FlowHandler(
             CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
         }
         if CONF_VERIFICATION_TOKEN in user_input:
+            # Check if this entry was configured via YAML by looking for a matching
+            # implementation. If YAML config exists, user must update YAML manually.
+            implementations = await config_entry_oauth2_flow.async_get_implementations(
+                self.hass, self.DOMAIN
+            )
+            for impl in implementations.values():
+                if (
+                    isinstance(impl, ZoomOAuth2Implementation)
+                    and impl.client_id == user_input[CONF_CLIENT_ID]
+                    and impl.client_secret == user_input[CONF_CLIENT_SECRET]
+                ):
+                    # YAML config exists - user must update YAML
+                    return self.async_abort(reason="yaml_update_required")
+
             return await self.async_step_reauth_secret_token(user_input)
 
         self._stored_data[CONF_SECRET_TOKEN] = user_input[CONF_SECRET_TOKEN]
