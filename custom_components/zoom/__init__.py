@@ -143,10 +143,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Register view
     hass.http.register_view(ZoomWebhookRequestView())
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    # Forward config entry setups for all defined platforms
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
