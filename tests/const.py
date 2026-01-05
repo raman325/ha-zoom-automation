@@ -9,6 +9,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.zoom.const import CONF_VERIFICATION_TOKEN, DOMAIN
 
 MOCK_CONFIG = {
+    CONF_NAME: "test",
     CONF_CLIENT_ID: "client_id",
     CONF_CLIENT_SECRET: "client_secret",
     CONF_VERIFICATION_TOKEN: "token",

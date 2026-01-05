@@ -1,10 +1,9 @@
 """Test zoom API."""
-
 from http import HTTPStatus
+from unittest.mock import patch
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
-from pytest_homeassistant_custom_component.async_mock import patch
 from pytest_homeassistant_custom_component.test_util.aiohttp import (
     AiohttpClientMockResponse,
 )
@@ -32,6 +31,7 @@ async def test_api(hass):
         OAUTH2_AUTHORIZE,
         OAUTH2_TOKEN,
         MOCK_ENTRY.data[CONF_VERIFICATION_TOKEN],
+        "test",
     )
     api = ZoomAPI(
         config_entry_oauth2_flow.OAuth2Session(hass, MOCK_ENTRY, implementation)
