@@ -72,7 +72,7 @@ def remove_verification_token_from_entry(
 ) -> None:
     """Remove the verification token from the config entry."""
     new_data = deepcopy(entry.data)
-    new_data.pop(CONF_VERIFICATION_TOKEN)
+    new_data.pop(CONF_VERIFICATION_TOKEN, None)
     if secret_token:
         new_data[CONF_SECRET_TOKEN] = secret_token
     hass.config_entries.async_update_entry(entry, data=new_data)
@@ -134,6 +134,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Zoom has moved from verification tokens to secret tokens. "
             "Please reconfigure this integration with your app's secret token. "
             "See the integration README for instructions."
+        )
+        # Trigger a reauth flow so the user can provide the new secret token
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH, "unique_id": entry.unique_id},
+                data=entry.data,
+            )
         )
         return False
 

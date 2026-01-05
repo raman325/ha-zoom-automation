@@ -6,6 +6,7 @@ import hashlib
 import hmac
 from http import HTTPStatus
 from logging import getLogger
+import time
 from typing import Any
 
 from aiohttp.web import Request, Response, json_response
@@ -31,6 +32,8 @@ from .const import (
 _LOGGER = getLogger(__name__)
 
 UNKNOWN_EVENT_MSG = "Received data that doesn't look like a Zoom webhook event"
+# Maximum age for webhook timestamps (5 minutes) to prevent replay attacks
+WEBHOOK_TIMESTAMP_MAX_AGE_SECONDS = 300
 
 
 def valid_external_url(hass: HomeAssistant) -> bool:
@@ -144,6 +147,25 @@ class ZoomWebhookRequestView(HomeAssistantView):
             _LOGGER.info("%s: %s (Headers: %s)", UNKNOWN_EVENT_MSG, text, headers)
             return Response(status=HTTPStatus.OK)
 
+        # Validate timestamp freshness to prevent replay attacks
+        try:
+            request_time = int(timestamp)
+            current_time = int(time.time())
+            if abs(current_time - request_time) > WEBHOOK_TIMESTAMP_MAX_AGE_SECONDS:
+                _LOGGER.warning(
+                    "Received Zoom webhook request with stale timestamp "
+                    "(request: %s, current: %s, max_age: %s)",
+                    request_time,
+                    current_time,
+                    WEBHOOK_TIMESTAMP_MAX_AGE_SECONDS,
+                )
+                return Response(status=HTTPStatus.OK)
+        except ValueError:
+            _LOGGER.warning(
+                "Received Zoom webhook request with invalid timestamp: %s", timestamp
+            )
+            return Response(status=HTTPStatus.OK)
+
         try:
             data = await request.json()
             status = WEBHOOK_RESPONSE_SCHEMA(data)
@@ -169,9 +191,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
             # token and we have to fail the validation request. We still respond with
             # a 200 status code so we don't leak information about this endpoint.
             _LOGGER.warning(
-                "Received Zoom webhook request that doesn't match any config entries'"
-                "secret token. Ensure you have configured the Zoom integration with "
-                "the correct secret token."
+                "Received Zoom webhook request that doesn't match any known secret tokens"
             )
             return Response(status=HTTPStatus.OK)
         assert secret_token
@@ -189,7 +209,17 @@ class ZoomWebhookRequestView(HomeAssistantView):
             return Response(status=HTTPStatus.OK)
 
         # Handle webhook validation request
-        plain_token = status[ATTR_PAYLOAD]["plainToken"]
+        payload = status.get(ATTR_PAYLOAD) or {}
+        plain_token = payload.get("plainToken")
+        if not isinstance(plain_token, str) or not plain_token:
+            _LOGGER.warning(
+                "Received Zoom webhook validation request with missing or invalid "
+                "plainToken: %s (Headers: %s)",
+                text,
+                headers,
+            )
+            return Response(status=HTTPStatus.OK)
+
         _LOGGER.debug("Received Zoom webhook validation request: %s", data)
         return json_response(
             {
@@ -221,8 +251,8 @@ class ZoomUserProfileDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed from err
 
 
-class ZoomContactlistDataUpdateCoordinator(DataUpdateCoordinator):
-    """Define an object to hold Zoom Contact list data."""
+class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
+    """Define an object to hold Zoom contact list data."""
 
     def __init__(
         self, hass: HomeAssistant, api: ZoomAPI, contact_types: list[str] = ["external"]

@@ -7,7 +7,7 @@
                     "name": "Account Name",
                     "client_id": "Client ID (obtained from Zoom app)",
                     "client_secret": "Client Secret (obtained from Zoom app)",
-                    "secret_token": "Secret Token (obtained from the Feature section of custom Zoom app)"
+                    "secret_token": "Secret Token (obtained from the Features section of custom Zoom app)"
                 }
             },
             "choose_name": {

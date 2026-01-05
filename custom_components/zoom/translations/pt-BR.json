@@ -27,8 +27,8 @@
                 "description": "A integração do Zoom precisa autenticar novamente sua conta"
             },
             "reauth_secret_token": {
-                "title": "Update entry to include secret token",
-                "description": "The Zoom integration uses secret tokens instead of the deprecated verification token. Please enter your secret token below. If you are unsure what the secret token is or how to get it, check the integration README."
+                "title": "Atualizar entrada para incluir token secreto",
+                "description": "A integração do Zoom usa tokens secretos em vez do token de verificação obsoleto. Por favor, insira seu token secreto abaixo. Se você não tem certeza do que é o token secreto ou como obtê-lo, consulte o README da integração."
             }
         },
         "abort": {

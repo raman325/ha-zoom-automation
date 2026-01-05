@@ -116,7 +116,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         """Restore state from last known state."""
         restored_state = await self.async_get_last_state()
         if restored_state:
-            self._is_on = restored_state.state
+            self._is_on = restored_state.state == "on"
 
     @staticmethod
     async def _async_send_update_options_signal(

@@ -1,7 +1,6 @@
 """Fixtures for zoom tests."""
 from unittest.mock import patch
 
-import pytest
 from pytest import fixture
 
 pytest_plugins = "pytest_homeassistant_custom_component"
