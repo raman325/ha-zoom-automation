@@ -4,7 +4,7 @@ version = "0.0.0"
 description = "Home Assistant custom integration for Zoom presence detection"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 authors = [
     {name = "Raman Gupta", email = "raman325@users.noreply.github.com"}
 ]
@@ -14,8 +14,8 @@ classifiers = [
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 [project.urls]
@@ -51,7 +51,7 @@ filterwarnings = [
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py313"
 line-length = 88
 exclude = [
     ".venv",
