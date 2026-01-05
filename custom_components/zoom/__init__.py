@@ -43,9 +43,7 @@ _LOGGER = getLogger(__name__)
 
 def ensure_all_have_unique_names(value: list[dict[str, str]]) -> list[dict[str, str]]:
     """Validate that for multiple entries, they have names."""
-    if len({entry[CONF_NAME] for entry in value}) != len(value) or len(value) != len(
-        set(value)
-    ):
+    if len({entry[CONF_NAME] for entry in value}) != len(value):
         raise vol.Invalid(
             "You must provide a unique name for each Zoom app when providing "
             "multiple sets of application credentials."
@@ -116,26 +114,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entry to new version."""
+    _LOGGER.debug("Migrating Zoom config entry from version %s", entry.version)
+
+    if entry.version == 1:
+        # V1 -> V2: Replace verification_token with secret_token
+        new_data = deepcopy(dict(entry.data))
+
+        # If entry already has secret_token, just clean up verification_token
+        if CONF_SECRET_TOKEN in new_data:
+            new_data.pop(CONF_VERIFICATION_TOKEN, None)
+            hass.config_entries.async_update_entry(entry, data=new_data, version=2)
+            _LOGGER.info("Migrated Zoom config entry to version 2")
+            return True
+
+        # No secret_token available - user must provide it through reauth
+        _LOGGER.warning(
+            "Zoom has moved from verification tokens to secret tokens. "
+            "Please reconfigure this integration with your app's secret token. "
+            "See the integration README for instructions."
+        )
+        return False
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Zoom from a config entry."""
-    if CONF_VERIFICATION_TOKEN in entry.data:
-        if CONF_SECRET_TOKEN not in entry.data:
-            _LOGGER.error(
-                "Zoom has moved to a new token type for verification, please reconfigure "
-                "this config entry with the secret token. To learn how to update your Zoom app "
-                "to support this change, check the integration repo's README."
-            )
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_REAUTH, "unique_id": entry.unique_id},
-                    data=entry.data,
-                )
-            )
-            return False
-
-        remove_verification_token_from_entry(hass, entry)
-
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(entry.entry_id, {})
     try:

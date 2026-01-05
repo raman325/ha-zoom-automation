@@ -63,7 +63,7 @@ class ZoomOAuth2FlowHandler(
 
     DOMAIN = DOMAIN
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     @callback
@@ -140,10 +140,10 @@ class ZoomOAuth2FlowHandler(
         self._stored_data[CONF_SECRET_TOKEN] = user_input[CONF_SECRET_TOKEN]
         return await self.async_step_reauth_confirm()
 
-    async def async_step_secret_token(
+    async def async_step_reauth_secret_token(
         self, user_input: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        """Confirm reauth."""
+        """Prompt user for secret token during reauth."""
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_secret_token",
@@ -152,7 +152,7 @@ class ZoomOAuth2FlowHandler(
                 ),
             )
         self._stored_data[CONF_SECRET_TOKEN] = user_input[CONF_SECRET_TOKEN]
-        return await self.async_step_user()
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
