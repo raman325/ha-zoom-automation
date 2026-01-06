@@ -137,28 +137,16 @@ class ZoomOAuth2FlowHandler(
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        """Perform reauth when OAuth token is invalid."""
+        """Perform reauth when OAuth token is invalid or secret token is missing."""
         self._stored_data = {
             CONF_NAME: user_input[CONF_NAME],
             CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
             CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
         }
-        if CONF_VERIFICATION_TOKEN in user_input:
-            # Check if this entry was configured via YAML by looking for a matching
-            # implementation. If YAML config exists, user must update YAML manually.
-            implementations = await config_entry_oauth2_flow.async_get_implementations(
-                self.hass, self.DOMAIN
-            )
-            for impl in implementations.values():
-                if (
-                    isinstance(impl, ZoomOAuth2Implementation)
-                    and impl.client_id == user_input[CONF_CLIENT_ID]
-                    and impl.client_secret == user_input[CONF_CLIENT_SECRET]
-                ):
-                    # YAML config exists - user must update YAML
-                    return self.async_abort(reason="yaml_update_required")
-
-            return await self.async_step_reauth_secret_token(user_input)
+        # If entry has verification_token (deprecated) or is missing secret_token,
+        # prompt user to provide their secret token via UI
+        if CONF_VERIFICATION_TOKEN in user_input or CONF_SECRET_TOKEN not in user_input:
+            return await self.async_step_reauth_secret_token()
 
         self._stored_data[CONF_SECRET_TOKEN] = user_input[CONF_SECRET_TOKEN]
         return await self.async_step_reauth_confirm()

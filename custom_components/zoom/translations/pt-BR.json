@@ -46,8 +46,7 @@
             "missing_configuration": "O componente não está configurado. Por favor, siga a documentação.",
             "authorize_url_timeout": "Tempo limite gerando URL de autorização.",
             "no_external_url": "Você não tem um URL externo para sua instância do Home Assistant configurado, o que é necessário para configurar a integração do Zoom. Você precisa definir a `external_url` no `homeassistant` no seu `configuration.yaml`, ou defina a `URL Externa` no Home Assistant em `Configurações - Geral`, antes de tentar configurar a integração do Zoom novamente. Você pode aprender mais sobre como configurar este parâmetro [aqui](https://www.home-assistant.io/docs/configuration/basic)",
-            "reauth_successful": "A reautenticação foi bem-sucedida",
-            "yaml_update_required": "Suas credenciais do Zoom estão configuradas no configuration.yaml. Por favor, atualize seu configuration.yaml para substituir `verification_token` por `secret_token` (encontrado em Recursos > Acesso no seu aplicativo Zoom) e reinicie o Home Assistant."
+            "reauth_successful": "A reautenticação foi bem-sucedida"
         },
         "create_entry": {
             "default": "Autenticado com sucesso"
