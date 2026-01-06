@@ -32,6 +32,13 @@
                 "data": {
                     "secret_token": "Token Secreto"
                 }
+            },
+            "provide_secret_token": {
+                "title": "Fornecer Token Secreto",
+                "description": "A configuração do seu aplicativo Zoom em configuration.yaml usa o `verification_token` obsoleto. Por favor, insira seu Token Secreto (encontrado em Recursos > Acesso no seu aplicativo Zoom). Você também deve atualizar seu configuration.yaml para usar `secret_token` em vez de `verification_token`.",
+                "data": {
+                    "secret_token": "Token Secreto"
+                }
             }
         },
         "abort": {

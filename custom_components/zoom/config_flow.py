@@ -21,7 +21,16 @@ from .const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
-    ZOOM_SCHEMA,
+)
+
+# UI schema requires secret_token (unlike YAML schema which allows verification_token for migration)
+UI_ZOOM_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): vol.Coerce(str),
+        vol.Required(CONF_CLIENT_ID): vol.Coerce(str),
+        vol.Required(CONF_CLIENT_SECRET): vol.Coerce(str),
+        vol.Required(CONF_SECRET_TOKEN): vol.Coerce(str),
+    }
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,7 +110,7 @@ class ZoomOAuth2FlowHandler(
         ):
             return self.async_show_form(
                 step_id="user",
-                data_schema=ZOOM_SCHEMA,
+                data_schema=UI_ZOOM_SCHEMA,
             )
 
         if user_input:
@@ -196,6 +205,20 @@ class ZoomOAuth2FlowHandler(
 
         return await self.async_oauth_create_entry(self._stored_data)
 
+    async def async_step_provide_secret_token(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Prompt user for secret token when YAML config lacks it."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="provide_secret_token",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_SECRET_TOKEN): vol.Coerce(str)}
+                ),
+            )
+        self._stored_data[CONF_SECRET_TOKEN] = user_input[CONF_SECRET_TOKEN]
+        return await self._async_finish_create_entry()
+
     async def async_oauth_create_entry(
         self, data: dict[str, Any] = None
     ) -> dict[str, Any]:
@@ -215,18 +238,30 @@ class ZoomOAuth2FlowHandler(
             return await self.async_step_choose_name()
 
         self.flow_impl: ZoomOAuth2Implementation
-        name = self._name or self.flow_impl.name
-        data.update(
+        # Store OAuth data and implementation info for later
+        self._stored_data = data.copy() if data else {}
+        self._stored_data.update(
             {
-                CONF_NAME: name,
+                CONF_NAME: self._name or self.flow_impl.name,
                 CONF_CLIENT_ID: self.flow_impl.client_id,
                 CONF_CLIENT_SECRET: self.flow_impl.client_secret,
-                CONF_SECRET_TOKEN: self.flow_impl._secret_token,
             }
         )
+
+        # Check if implementation has a valid secret_token
+        if not self.flow_impl._secret_token:
+            # YAML config lacks secret_token - prompt user to provide it
+            return await self.async_step_provide_secret_token()
+
+        self._stored_data[CONF_SECRET_TOKEN] = self.flow_impl._secret_token
+        return await self._async_finish_create_entry()
+
+    async def _async_finish_create_entry(self) -> dict[str, Any]:
+        """Finish creating the config entry."""
+        name = self._stored_data[CONF_NAME]
         if not self.unique_id:
             await self.async_set_unique_id(
                 f"{DOMAIN}_{slugify(name)}", raise_on_progress=True
             )
             self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=name, data=data)
+        return self.async_create_entry(title=name, data=self._stored_data)

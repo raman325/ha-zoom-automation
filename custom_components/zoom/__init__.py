@@ -168,6 +168,22 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Zoom from a config entry."""
+    # Check if secret_token is missing - this means YAML needs to be updated
+    if not entry.data.get(CONF_SECRET_TOKEN):
+        _LOGGER.error(
+            "Zoom config entry '%s' is missing a secret token. "
+            "Please update your configuration.yaml to replace 'verification_token' "
+            "with 'secret_token' (found under Features > Access in your Zoom app), "
+            "then restart Home Assistant.",
+            entry.title,
+        )
+        # Trigger reauth flow so user can provide the secret token
+        # Add CONF_VERIFICATION_TOKEN marker so reauth flow prompts for secret token
+        reauth_data = dict(entry.data)
+        reauth_data[CONF_VERIFICATION_TOKEN] = True
+        entry.async_start_reauth(hass, data=reauth_data)
+        return False
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(entry.entry_id, {})
     try:

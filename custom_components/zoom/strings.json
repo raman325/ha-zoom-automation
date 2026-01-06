@@ -32,6 +32,13 @@
                 "data": {
                     "secret_token": "Secret Token"
                 }
+            },
+            "provide_secret_token": {
+                "title": "Provide Secret Token",
+                "description": "Your Zoom app configuration in configuration.yaml uses the deprecated `verification_token`. Please enter your Secret Token (found under Features > Access in your Zoom app). You should also update your configuration.yaml to use `secret_token` instead of `verification_token`.",
+                "data": {
+                    "secret_token": "Secret Token"
+                }
             }
         },
         "abort": {
