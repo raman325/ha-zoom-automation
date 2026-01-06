@@ -168,6 +168,17 @@ class ZoomWebhookRequestView(HomeAssistantView):
 
         try:
             data = await request.json()
+        except Exception as err:
+            _LOGGER.info(
+                "%s: %s (Headers: %s) (Error: %s)",
+                UNKNOWN_EVENT_MSG,
+                text,
+                headers,
+                err,
+            )
+            return Response(status=HTTPStatus.OK)
+
+        try:
             status = WEBHOOK_RESPONSE_SCHEMA(data)
         except Exception as err:
             _LOGGER.info(
