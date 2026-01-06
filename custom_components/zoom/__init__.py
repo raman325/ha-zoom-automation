@@ -190,20 +190,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ZoomOAuth2FlowHandler.async_register_implementation(hass, implementation)
 
     api = ZoomAPI(config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation))
-    coordinator = ZoomUserProfileDataUpdateCoordinator(hass, api)
-    await coordinator.async_refresh()
-    hass.data[DOMAIN][entry.entry_id][USER_PROFILE_COORDINATOR] = coordinator
-    hass.data[DOMAIN][entry.entry_id][API] = api
 
     try:
         my_profile = await api.async_get_my_user_profile()
     except (HTTPUnauthorized, ClientResponseError) as err:
         if isinstance(err, ClientResponseError) and err.status not in (400, 401):
-            return False
+            raise
 
         # If we are not authorized, we need to revalidate OAuth
+        _LOGGER.info("OAuth token invalid, triggering reauth for %s", entry.title)
         entry.async_start_reauth(hass, data=dict(entry.data))
         return False
+
+    coordinator = ZoomUserProfileDataUpdateCoordinator(hass, api)
+    await coordinator.async_refresh()
+    hass.data[DOMAIN][entry.entry_id][USER_PROFILE_COORDINATOR] = coordinator
+    hass.data[DOMAIN][entry.entry_id][API] = api
     new_data = entry.data.copy()
     new_data[CONF_ID] = my_profile.get("id")  # type: ignore
     hass.config_entries.async_update_entry(entry, data=new_data)  # type: ignore
