@@ -71,7 +71,6 @@ class ZoomOAuth2FlowHandler(
     """Config flow to handle Zoom Automation OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
     VERSION = 2
 
     @staticmethod
