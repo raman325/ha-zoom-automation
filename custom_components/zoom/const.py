@@ -47,15 +47,18 @@ CONNECTIVITY_ID = [ATTR_PAYLOAD, ATTR_OBJECT, ATTR_ID]
 
 VALIDATION_EVENT = "endpoint.url_validation"
 
+# Zoom presence statuses from user.presence_status_updated webhook event
+# https://developers.zoom.us/docs/api/users/events/#tag/user/postuser.presence_status_updated
 ALL_CONNECTIVITY_STATUSES = [
-    "Available",
-    "Away",
-    "Do_Not_Disturb",
-    "In_Calendar_Event",
-    "In_Meeting",
-    "Offline",
-    "On_Phone_Call",
-    "Presenting",
+    "Available",  # Online
+    "Away",  # Away
+    "Do_Not_Disturb",  # Do not disturb
+    "In_Calendar_Event",  # In a calendar event
+    "In_Meeting",  # In a Zoom meeting
+    "Mobile_signed_in",  # Desktop offline, but mobile device is signed in
+    "Offline",  # Offline
+    "On_Phone_Call",  # On a Zoom Phone call
+    "Presenting",  # Sharing screen in a Zoom meeting
 ]
 DEFAULT_CONNECTIVITY_ON_STATUSES = ["In_Meeting", "Presenting", "On_Phone_Call"]
 
