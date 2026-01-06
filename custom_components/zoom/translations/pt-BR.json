@@ -35,10 +35,14 @@
             },
             "provide_secret_token": {
                 "title": "Fornecer Token Secreto",
-                "description": "A configuração do seu aplicativo Zoom em configuration.yaml usa o `verification_token` obsoleto. Por favor, insira seu Token Secreto (encontrado em Recursos > Acesso no seu aplicativo Zoom). Você também deve atualizar seu configuration.yaml para usar `secret_token` em vez de `verification_token`.",
+                "description": "A configuração do seu aplicativo Zoom em configuration.yaml usa o `verification_token` obsoleto. Por favor, insira seu Token Secreto (encontrado em Recursos > Acesso no seu aplicativo Zoom).",
                 "data": {
                     "secret_token": "Token Secreto"
                 }
+            },
+            "yaml_cleanup_warning": {
+                "title": "Atualize Sua Configuração",
+                "description": "Seu token secreto foi salvo. No entanto, seu `configuration.yaml` ainda contém o `verification_token` obsoleto. Por favor, atualize sua configuração:\n\n1. Abra seu `configuration.yaml`\n2. Encontre a seção `zoom`\n3. Substitua `verification_token` por `secret_token`\n4. Reinicie o Home Assistant\n\nAté que você faça isso, você verá avisos de depreciação em cada reinicialização."
             }
         },
         "abort": {

@@ -35,10 +35,14 @@
             },
             "provide_secret_token": {
                 "title": "Provide Secret Token",
-                "description": "Your Zoom app configuration in configuration.yaml uses the deprecated `verification_token`. Please enter your Secret Token (found under Features > Access in your Zoom app). You should also update your configuration.yaml to use `secret_token` instead of `verification_token`.",
+                "description": "Your Zoom app configuration in configuration.yaml uses the deprecated `verification_token`. Please enter your Secret Token (found under Features > Access in your Zoom app).",
                 "data": {
                     "secret_token": "Secret Token"
                 }
+            },
+            "yaml_cleanup_warning": {
+                "title": "Update Your Configuration",
+                "description": "Your secret token has been saved. However, your `configuration.yaml` still contains the deprecated `verification_token`. Please update your configuration:\n\n1. Open your `configuration.yaml`\n2. Find the `zoom` section\n3. Replace `verification_token` with `secret_token`\n4. Restart Home Assistant\n\nUntil you do this, you will see deprecation warnings on each restart."
             }
         },
         "abort": {

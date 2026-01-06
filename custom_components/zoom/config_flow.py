@@ -151,6 +151,36 @@ class ZoomOAuth2FlowHandler(
         self._stored_data[CONF_SECRET_TOKEN] = user_input[CONF_SECRET_TOKEN]
         return await self.async_step_reauth_confirm()
 
+    async def _yaml_has_verification_token(self) -> bool:
+        """Check if YAML config has verification_token (deprecated) for this entry."""
+        implementations = await config_entry_oauth2_flow.async_get_implementations(
+            self.hass, self.DOMAIN
+        )
+        for impl in implementations.values():
+            if (
+                isinstance(impl, ZoomOAuth2Implementation)
+                and impl.client_id == self._stored_data.get(CONF_CLIENT_ID)
+                and impl.client_secret == self._stored_data.get(CONF_CLIENT_SECRET)
+                and not impl._secret_token  # YAML has no secret_token
+            ):
+                return True
+        return False
+
+    async def async_step_yaml_cleanup_warning(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Warn user to remove verification_token from YAML."""
+        if user_input is not None:
+            # User acknowledged the warning, proceed
+            if self.source == config_entries.SOURCE_REAUTH:
+                return await self.async_step_reauth_confirm()
+            return await self._async_finish_create_entry()
+
+        return self.async_show_form(
+            step_id="yaml_cleanup_warning",
+            data_schema=vol.Schema({}),
+        )
+
     async def async_step_reauth_secret_token(
         self, user_input: dict[str, Any] | None = None
     ) -> dict[str, Any]:
@@ -163,6 +193,10 @@ class ZoomOAuth2FlowHandler(
                 ),
             )
         self._stored_data[CONF_SECRET_TOKEN] = user_input[CONF_SECRET_TOKEN]
+
+        # Check if YAML has deprecated verification_token
+        if await self._yaml_has_verification_token():
+            return await self.async_step_yaml_cleanup_warning()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -205,7 +239,8 @@ class ZoomOAuth2FlowHandler(
                 ),
             )
         self._stored_data[CONF_SECRET_TOKEN] = user_input[CONF_SECRET_TOKEN]
-        return await self._async_finish_create_entry()
+        # Always show warning since this step is only reached when YAML lacks secret_token
+        return await self.async_step_yaml_cleanup_warning()
 
     async def async_oauth_create_entry(
         self, data: dict[str, Any] = None
