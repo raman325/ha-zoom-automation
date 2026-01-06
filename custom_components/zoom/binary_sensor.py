@@ -12,14 +12,13 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME
-from homeassistant.core import Event
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
 from .common import ZoomAPI, ZoomUserProfileDataUpdateCoordinator, get_contact_name
@@ -43,7 +42,7 @@ PARALLEL_UPDATES = 5
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up a Zoom presence sensor entry."""
     # Set default options
@@ -69,7 +68,7 @@ def get_data_from_path(data: dict[str, Any], path: list[str]) -> str | None:
 class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
     """Base class for Zoom binary_sensor."""
 
-    def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize base sensor."""
         self._config_entry = config_entry
         self._hass = hass
@@ -120,7 +119,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
 
     @staticmethod
     async def _async_send_update_options_signal(
-        hass: HomeAssistantType, config_entry: ConfigEntry
+        hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Send update event when Zoom config entry is updated."""
         async_dispatcher_send(hass, config_entry.entry_id)
@@ -255,7 +254,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
 class ZoomAuthenticatedUserBinarySensor(ZoomBaseBinarySensor):
     """Class for Zoom user profile binary sensor for authenticated user."""
 
-    def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize Zoom user profile binary sensor for authenticated user."""
         super().__init__(hass, config_entry)
         self._attr_name = f"Zoom - {self._name}"
@@ -294,7 +293,7 @@ class ZoomContactUserBinarySensor(ZoomBaseBinarySensor):
     """Class for Zoom user profile binary sensor for contacts of authenticated user."""
 
     def __init__(
-        self, hass: HomeAssistantType, config_entry: ConfigEntry, id: str
+        self, hass: HomeAssistant, config_entry: ConfigEntry, id: str
     ) -> None:
         """Initialize entity."""
         super().__init__(hass, config_entry)
