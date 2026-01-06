@@ -160,13 +160,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "See the integration README for instructions."
         )
         # Trigger a reauth flow so the user can provide the new secret token
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH, "unique_id": entry.unique_id},
-                data=entry.data,
-            )
-        )
+        entry.async_start_reauth(hass, data=dict(entry.data))
         return False
 
     return True

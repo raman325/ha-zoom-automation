@@ -248,7 +248,7 @@ class ZoomUserProfileDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             return await self._api.async_get_my_user_profile()
         except Exception as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(f"Error fetching user profile: {err}") from err
 
 
 class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
@@ -273,4 +273,4 @@ class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             return await self._api.async_get_contacts(self._contact_types)
         except Exception as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(f"Error fetching contacts: {err}") from err
