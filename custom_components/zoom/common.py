@@ -1,4 +1,5 @@
 """Common classes and functions for Zoom."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -10,12 +11,20 @@ import time
 from typing import Any
 
 from aiohttp.web import Request, Response, json_response
+from homeassistant.components.event import DOMAIN as EVT_DOMAIN
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import (
+    EntityRegistry,
+    async_entries_for_config_entry,
+    async_get as async_get_entity_registry,
+)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+import voluptuous as vol
 
 from .api import ZoomAPI
 from .const import (
@@ -25,6 +34,7 @@ from .const import (
     DOMAIN,
     HA_URL,
     HA_ZOOM_EVENT,
+    SIGNAL_NEW_ZOOM_EVENT_TYPE,
     VALIDATION_EVENT,
     WEBHOOK_RESPONSE_SCHEMA,
 )
@@ -125,6 +135,24 @@ def _find_entry_with_signature(
     return None, None
 
 
+def _new_event_entity_needed(
+    ent_reg: EntityRegistry, entry: ConfigEntry, event_type: str
+) -> bool:
+    """
+    Determine if a new event entity is needed for the given event type.
+
+    If an entity for the event type already exists for the config entry, return False.
+    Otherwise, return True.
+    """
+    return not (
+        (existing_entities := async_entries_for_config_entry(ent_reg, entry.entry_id))
+        and any(
+            ent.domain == EVT_DOMAIN and event_type in ent.unique_id
+            for ent in existing_entities
+        )
+    )
+
+
 class ZoomWebhookRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
 
@@ -132,16 +160,18 @@ class ZoomWebhookRequestView(HomeAssistantView):
     cors_allowed = True
     url = HA_URL
     name = HA_URL[1:].replace("/", ":")
+    _ent_reg: EntityRegistry | None = None
 
     async def post(self, request: Request) -> Response:
         """Respond to requests from the device."""
+        if not self._ent_reg:
+            self._ent_reg = async_get_entity_registry(request.app["hass"])
+
         text = await request.text()
         hass: HomeAssistant = request.app["hass"]
         headers = request.headers
 
-        _LOGGER.debug(
-            "Webhook request received: %s (Headers: %s)", text, dict(headers)
-        )
+        _LOGGER.debug("Webhook request received: %s (Headers: %s)", text, dict(headers))
 
         # If either Zoom header is missing, this is not a valid webhook request
         if not (
@@ -175,7 +205,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
         _LOGGER.debug("Timestamp valid, parsing JSON payload")
 
         try:
-            data = await request.json()
+            request_dict = await request.json()
         except Exception as err:
             _LOGGER.info(
                 "%s: %s (Headers: %s) (Error: %s)",
@@ -187,8 +217,8 @@ class ZoomWebhookRequestView(HomeAssistantView):
             return Response(status=HTTPStatus.OK)
 
         try:
-            status = WEBHOOK_RESPONSE_SCHEMA(data)
-        except Exception as err:
+            data = WEBHOOK_RESPONSE_SCHEMA(request_dict)
+        except vol.Error as err:
             _LOGGER.info(
                 "%s: %s (Headers: %s) (Error: %s)",
                 UNKNOWN_EVENT_MSG,
@@ -198,7 +228,7 @@ class ZoomWebhookRequestView(HomeAssistantView):
             )
             return Response(status=HTTPStatus.OK)
 
-        event_type = status.get(ATTR_EVENT, "unknown")
+        event_type = data.get(ATTR_EVENT, "unknown")
         _LOGGER.debug(
             "Payload validated (event: %s), verifying signature against config entries",
             event_type,
@@ -231,21 +261,36 @@ class ZoomWebhookRequestView(HomeAssistantView):
             entry.title,
         )
 
+        # If we haven't already registered an entity for this event type, do so now
+        if _new_event_entity_needed(self._ent_reg, entry, event_type):
+            _LOGGER.info(
+                "Received new Zoom event type '%s' for config entry %s (user: %s)",
+                event_type,
+                entry.entry_id,
+                entry.title,
+            )
+            async_dispatcher_send(
+                hass,
+                f"{SIGNAL_NEW_ZOOM_EVENT_TYPE}|{entry.entry_id}",
+                event_type,
+                data,
+            )
+
         # Pass events that are not webhook validation requests on to the integration
         if event_type != VALIDATION_EVENT:
             _LOGGER.debug(
                 "Firing event %s for %s: %s",
                 HA_ZOOM_EVENT,
                 entry.title,
-                status,
+                data,
             )
             hass.bus.async_fire(
-                f"{HA_ZOOM_EVENT}", {**status, "ha_config_entry_id": entry.entry_id}
+                f"{HA_ZOOM_EVENT}", {**data, "ha_config_entry_id": entry.entry_id}
             )
             return Response(status=HTTPStatus.OK)
 
         # Handle webhook validation request
-        payload = status.get(ATTR_PAYLOAD) or {}
+        payload = data.get(ATTR_PAYLOAD) or {}
         plain_token = payload.get("plainToken")
         if not isinstance(plain_token, str) or not plain_token:
             _LOGGER.warning(
@@ -294,7 +339,7 @@ class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold Zoom contact list data."""
 
     def __init__(
-        self, hass: HomeAssistant, api: ZoomAPI, contact_types: list[str] = ["external"]
+        self, hass: HomeAssistant, api: ZoomAPI, contact_types: list[str] | None = None
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -305,7 +350,7 @@ class ZoomContactListDataUpdateCoordinator(DataUpdateCoordinator):
             update_method=self._async_update_data,
         )
         self._api = api
-        self._contact_types = contact_types
+        self._contact_types = contact_types or ["external"]
 
     async def _async_update_data(self) -> list[dict[str, str]]:
         """Update data via library."""

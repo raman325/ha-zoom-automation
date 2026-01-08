@@ -1,8 +1,3 @@
-# This project is no longer actively maintained
-
-I switched jobs in 2021 and no longer use Zoom so I am unable to continue developing this integration further. I would be happy to transfer ownership or add contributers, and in lieu of that I will review PRs and accept contributions. Please open an issue if you would like to take a more active role in this integration.
-
-
 [![Last Commit][last-commit-shield]][commits]
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
@@ -59,15 +54,28 @@ Zoom has deprecated verification tokens in favor of secret tokens with HMAC sign
 
 > NOTE: If you want to monitor multiple Zoom accounts, skip to the next set of installation instructions
 
-<details><summary>Sensors Provided</summary>
+<details><summary>Entities Provided</summary>
 
-You will get a binary sensor out of the box:
+### Binary Sensor
 
 |  | Description |
 |-|-|
 | Name | `binary_sensor.zoom_{PROVIDED_ACCOUNT_NAME}` |
-| Purpose | Tracks user presence on a Zoom call by consuming the  `User's presence status has been updated`  event. If the state is `on`, the user is on a Zoom call. |
-| Notes | If  `User's presence status has been updated`  is not enabled in the Zoom App's Event Subscriptions, this sensor will not work and can be disabled. |
+| Purpose | Tracks user presence on a Zoom call by consuming the `User's presence status has been updated` event. If the state is `on`, the user is on a Zoom call. |
+| Notes | If `User's presence status has been updated` is not enabled in the Zoom App's Event Subscriptions, this sensor will not work and can be disabled. |
+
+### Event Entities (Diagnostic)
+
+Event entities are created dynamically when the integration receives a new webhook event type for the first time. These entities provide a way to track and automate based on any Zoom webhook event.
+
+|  | Description |
+|-|-|
+| Name | `event.{PROVIDED_ACCOUNT_NAME}_{event_type}` (e.g., `event.zoom_presence_status_updated`) |
+| Purpose | Tracks individual Zoom webhook event types. Each unique event type gets its own entity. |
+| Attributes | `event_ts` (timestamp), `payload` (full event payload), `last_event_ts`, `last_payload` (from previous event) |
+| Use Cases | **Automations**: Trigger actions when specific Zoom events occur (meeting started, recording available, etc.). **Troubleshooting**: View the last received payload for debugging webhook issues. **History**: Track when events occurred via entity history. |
+
+**Example**: If you subscribe to `meeting.started` events in your Zoom app, an `event.zoom_meeting_started` entity will be created the first time that event is received.
 
 </details>
 
@@ -132,15 +140,28 @@ zoom:
 
 ## Installation (Multiple Account Monitoring)
 
-<details><summary>Sensors Provided</summary>
+<details><summary>Entities Provided</summary>
 
-You will get a binary sensor out of the box:
+### Binary Sensor
 
 |  | Description |
 |-|-|
 | Name | `binary_sensor.zoom_{PROVIDED_ACCOUNT_NAME}` |
-| Purpose | Tracks user presence on a Zoom call by consuming the  `User's presence status has been updated`  event. If the state is `on`, the user is on a Zoom call. |
-| Notes | If  `User's presence status has been updated`  is not enabled in the Zoom App's Event Subscriptions, this sensor will not work and can be disabled. |
+| Purpose | Tracks user presence on a Zoom call by consuming the `User's presence status has been updated` event. If the state is `on`, the user is on a Zoom call. |
+| Notes | If `User's presence status has been updated` is not enabled in the Zoom App's Event Subscriptions, this sensor will not work and can be disabled. |
+
+### Event Entities (Diagnostic)
+
+Event entities are created dynamically when the integration receives a new webhook event type for the first time. These entities provide a way to track and automate based on any Zoom webhook event.
+
+|  | Description |
+|-|-|
+| Name | `event.{PROVIDED_ACCOUNT_NAME}_{event_type}` (e.g., `event.zoom_presence_status_updated`) |
+| Purpose | Tracks individual Zoom webhook event types. Each unique event type gets its own entity. |
+| Attributes | `event_ts` (timestamp), `payload` (full event payload), `last_event_ts`, `last_payload` (from previous event) |
+| Use Cases | **Automations**: Trigger actions when specific Zoom events occur (meeting started, recording available, etc.). **Troubleshooting**: View the last received payload for debugging webhook issues. **History**: Track when events occurred via entity history. |
+
+**Example**: If you subscribe to `meeting.started` events in your Zoom app, an `event.zoom_meeting_started` entity will be created the first time that event is received.
 
 </details>
 
@@ -225,9 +246,26 @@ condition:
 
 You are free to create automations however you see fit, but here are some tips:
 
-### Trigger
+### Using Event Entities (Recommended)
 
-Your trigger configuration should be as follows:
+Event entities provide a cleaner way to trigger automations. Once an event entity exists (created automatically on first webhook), you can use it directly:
+
+```yaml
+trigger:
+  - platform: state
+    entity_id: event.zoom_presence_status_updated
+action:
+  - service: notify.mobile_app
+    data:
+      message: "Zoom status changed to {{ trigger.to_state.attributes.payload.object.presence_status }}"
+```
+
+You can also access the previous event's data using `last_payload` and `last_event_ts` attributes for comparison logic.
+
+### Using Raw Webhook Events
+
+Alternatively, you can trigger on the raw `zoom_webhook` event:
+
 ```yaml
 trigger:
   platform: event

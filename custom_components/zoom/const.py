@@ -21,6 +21,9 @@ USER_PROFILE_URL = "users/me"
 USER_PROFILE_COORDINATOR = "user_profile_coordinator"
 CONTACT_LIST_URL = "chat/users/me/contacts"
 CONTACT_LIST_COORDINATOR = "contact_list_coordinator"
+EVENT_MANAGER = "event_manager"
+# Dispatcher signal for notifying event platform of new event types
+SIGNAL_NEW_ZOOM_EVENT_TYPE = f"{DOMAIN}_new_event_type"
 
 ZOOM_SCHEMA = vol.Schema(
     {
@@ -36,7 +39,9 @@ ZOOM_SCHEMA = vol.Schema(
 
 ATTR_EVENT = "event"
 ATTR_EVENT_TS = "event_ts"
+ATTR_LAST_EVENT_TS = "last_event_ts"
 ATTR_PAYLOAD = "payload"
+ATTR_LAST_PAYLOAD = "last_payload"
 ATTR_OBJECT = "object"
 ATTR_ID = "id"
 ATTR_CONNECTIVITY_STATUS = "presence_status"
