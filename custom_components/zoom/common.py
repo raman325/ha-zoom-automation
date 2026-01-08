@@ -139,6 +139,10 @@ class ZoomWebhookRequestView(HomeAssistantView):
         hass: HomeAssistant = request.app["hass"]
         headers = request.headers
 
+        _LOGGER.debug(
+            "Webhook request received: %s (Headers: %s)", text, dict(headers)
+        )
+
         # If either Zoom header is missing, this is not a valid webhook request
         if not (
             (signature := headers.get("x-zm-signature"))
@@ -146,6 +150,8 @@ class ZoomWebhookRequestView(HomeAssistantView):
         ):
             _LOGGER.info("%s: %s (Headers: %s)", UNKNOWN_EVENT_MSG, text, headers)
             return Response(status=HTTPStatus.OK)
+
+        _LOGGER.debug("Zoom headers present, validating timestamp")
 
         # Validate timestamp freshness to prevent replay attacks
         try:
@@ -165,6 +171,8 @@ class ZoomWebhookRequestView(HomeAssistantView):
                 "Received Zoom webhook request with invalid timestamp: %s", timestamp
             )
             return Response(status=HTTPStatus.OK)
+
+        _LOGGER.debug("Timestamp valid, parsing JSON payload")
 
         try:
             data = await request.json()
@@ -190,6 +198,12 @@ class ZoomWebhookRequestView(HomeAssistantView):
             )
             return Response(status=HTTPStatus.OK)
 
+        event_type = status.get(ATTR_EVENT, "unknown")
+        _LOGGER.debug(
+            "Payload validated (event: %s), verifying signature against config entries",
+            event_type,
+        )
+
         # Find the first config entry where the secret token can be used to
         # match the signature header from the webhook validation request
         entry, secret_token = _find_entry_with_signature(
@@ -201,17 +215,28 @@ class ZoomWebhookRequestView(HomeAssistantView):
             # if we get here, there was no found config entry with a matching secret
             # token and we have to fail the validation request. We still respond with
             # a 200 status code so we don't leak information about this endpoint.
+            num_entries = len(hass.config_entries.async_entries(DOMAIN))
             _LOGGER.warning(
-                "Received Zoom webhook request that doesn't match any known secret tokens"
+                "Received Zoom webhook request (event: %s) that doesn't match any "
+                "of the %s configured secret token(s)",
+                event_type,
+                num_entries,
             )
             return Response(status=HTTPStatus.OK)
         assert secret_token
 
+        _LOGGER.debug(
+            "Signature verified for config entry %s (user: %s)",
+            entry.entry_id,
+            entry.title,
+        )
+
         # Pass events that are not webhook validation requests on to the integration
-        if status[ATTR_EVENT] != VALIDATION_EVENT:
+        if event_type != VALIDATION_EVENT:
             _LOGGER.debug(
-                "Received validated Zoom event for config entry %s: %s",
-                entry.entry_id,
+                "Firing event %s for %s: %s",
+                HA_ZOOM_EVENT,
+                entry.title,
                 status,
             )
             hass.bus.async_fire(
@@ -231,7 +256,10 @@ class ZoomWebhookRequestView(HomeAssistantView):
             )
             return Response(status=HTTPStatus.OK)
 
-        _LOGGER.debug("Received Zoom webhook validation request: %s", data)
+        _LOGGER.debug(
+            "Responding to webhook validation request for %s",
+            entry.title,
+        )
         return json_response(
             {
                 "plainToken": plain_token,
