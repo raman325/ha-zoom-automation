@@ -1,4 +1,5 @@
 """The Zoom integration."""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -6,6 +7,7 @@ from logging import getLogger
 
 from aiohttp.client_exceptions import ClientResponseError
 from aiohttp.web_exceptions import HTTPUnauthorized
+from homeassistant.components.event import DOMAIN as EVT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -16,6 +18,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_get as async_get_entity_registry,
+)
 from homeassistant.helpers.typing import ConfigType
 import voluptuous as vol
 
@@ -34,6 +41,7 @@ from .const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
+    SIGNAL_NEW_ZOOM_EVENT_TYPE,
     USER_PROFILE_COORDINATOR,
     ZOOM_SCHEMA,
 )
@@ -64,7 +72,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.EVENT]
 
 
 def remove_verification_token_from_entry(
@@ -231,6 +239,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Forward config entry setups for all defined platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Re-add any existing event entities for this config entry by obtaining their
+    # event type from their unique IDs
+    ent_reg = async_get_entity_registry(hass)
+    for event_type in {
+        ent_entry.unique_id.split("|")[-1]
+        for ent_entry in async_entries_for_config_entry(ent_reg, entry.entry_id)
+        if ent_entry.domain == EVT_DOMAIN
+    }:
+        async_dispatcher_send(
+            hass, f"{SIGNAL_NEW_ZOOM_EVENT_TYPE}|{entry.entry_id}", event_type
+        )
 
     return True
 
