@@ -1,7 +1,8 @@
 """API for Zoom Automation bound to Home Assistant OAuth."""
+from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from aiohttp.web import HTTPUnauthorized
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -24,14 +25,14 @@ class ZoomAPI:
 
         return self._oauth_session.token
 
-    async def async_get_my_user_profile(self) -> Dict[str, Any]:
+    async def async_get_my_user_profile(self) -> dict[str, Any]:
         """Get user profile for this authentication."""
         resp = await self._oauth_session.async_request(
             "get", f"{BASE_URL}{USER_PROFILE_URL}", raise_for_status=True
         )
         return await resp.json()
 
-    async def async_get_contact_user_profile(self, id: Optional[str]) -> Dict[str, str]:
+    async def async_get_contact_user_profile(self, id: str | None) -> dict[str, str]:
         """Get presence status for user with given ID."""
         resp = await self._oauth_session.async_request(
             "get",
@@ -42,8 +43,8 @@ class ZoomAPI:
         return await resp.json()
 
     async def async_get_contacts(
-        self, contact_types: List[str] = ["external"], limit: int = None
-    ) -> List[Dict[str, str]]:
+        self, contact_types: list[str] = ["external"], limit: int = None
+    ) -> list[dict[str, str]]:
         contacts = []
 
         for contact_type in contact_types:

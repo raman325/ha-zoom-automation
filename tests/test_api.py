@@ -11,7 +11,7 @@ from pytest_homeassistant_custom_component.test_util.aiohttp import (
 from custom_components.zoom.api import ZoomAPI
 from custom_components.zoom.common import ZoomOAuth2Implementation
 from custom_components.zoom.const import (
-    CONF_VERIFICATION_TOKEN,
+    CONF_SECRET_TOKEN,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
@@ -30,7 +30,7 @@ async def test_api(hass):
         MOCK_ENTRY.data[CONF_CLIENT_SECRET],
         OAUTH2_AUTHORIZE,
         OAUTH2_TOKEN,
-        MOCK_ENTRY.data[CONF_VERIFICATION_TOKEN],
+        MOCK_ENTRY.data[CONF_SECRET_TOKEN],
         "test",
     )
     api = ZoomAPI(

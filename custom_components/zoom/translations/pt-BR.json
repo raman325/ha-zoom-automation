@@ -7,7 +7,7 @@
                     "name": "Nome da conta",
                     "client_id": "ID do cliente (obtido do aplicativo Zoom)",
                     "client_secret": "Segredo do cliente (obtido do aplicativo Zoom)",
-                    "verification_token": "Token de verificação (obtido na seção Recursos do aplicativo Zoom personalizado)"
+                    "secret_token": "Token secreto (em Recursos > Acesso no seu aplicativo Zoom)"
                 }
             },
             "choose_name": {
@@ -25,6 +25,24 @@
             "reauth_confirm": {
                 "title": "Reautenticar Integração",
                 "description": "A integração do Zoom precisa autenticar novamente sua conta"
+            },
+            "reauth_secret_token": {
+                "title": "Atualizar entrada para incluir token secreto",
+                "description": "A integração do Zoom agora usa tokens secretos em vez do token de verificação obsoleto. Por favor, insira seu Token Secreto (encontrado em Recursos > Acesso no seu aplicativo Zoom).",
+                "data": {
+                    "secret_token": "Token Secreto"
+                }
+            },
+            "provide_secret_token": {
+                "title": "Fornecer Token Secreto",
+                "description": "A configuração do seu aplicativo Zoom em configuration.yaml usa o `verification_token` obsoleto. Por favor, insira seu Token Secreto (encontrado em Recursos > Acesso no seu aplicativo Zoom).",
+                "data": {
+                    "secret_token": "Token Secreto"
+                }
+            },
+            "yaml_cleanup_warning": {
+                "title": "Atualize Sua Configuração",
+                "description": "Seu token secreto foi salvo. No entanto, seu `configuration.yaml` ainda contém o `verification_token` obsoleto. Por favor, atualize sua configuração:\n\n1. Abra seu `configuration.yaml`\n2. Encontre a seção `zoom`\n3. Substitua `verification_token` por `secret_token`\n4. Reinicie o Home Assistant\n\nAté que você faça isso, você verá avisos de depreciação em cada reinicialização."
             }
         },
         "abort": {

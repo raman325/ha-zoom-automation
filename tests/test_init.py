@@ -43,7 +43,7 @@ async def test_component_setup_failure(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
-async def test_entry_setup_and_unload(hass: HomeAssistant, my_profile) -> None:
+async def test_entry_setup_and_unload(hass: HomeAssistant) -> None:
     """Test entry setup and unload."""
     MOCK_ENTRY.add_to_hass(hass)
     assert await async_setup_component(
