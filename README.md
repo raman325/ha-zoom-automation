@@ -30,6 +30,16 @@ Because the event name is included in the JSON payload sent to the webhook, you 
 
 Your Home Assistant instance must be externally accessible from the Internet. The `External URL` will also need to be appropriately set and should replace `<BASE_HA_URL>` references in the installation instructions. You can do this in your `configuration.yaml` or through the UI as mentioned [in the docs](https://www.home-assistant.io/docs/configuration/basic/).
 
+### Enterprise/Corporate Account Restrictions
+
+If your Zoom account is managed by an organization (Enterprise or Corporate accounts), your administrator may restrict certain capabilities. This integration requires the ability to:
+
+- **Create custom OAuth apps** in the Zoom Marketplace
+- **Access and configure webhooks** for event subscriptions
+- **Request necessary OAuth scopes** (e.g., `chat_contact:read` for presence status)
+
+If your organization has disabled these permissions for users, this integration will not work. Contact your Zoom administrator to request access to app development features, or use a personal Zoom account instead.
+
 ### Zoom Webhook Requirements
 
 Zoom has specific requirements for webhook endpoints ([see docs](https://developers.zoom.us/docs/api/webhooks/#validate-your-webhook-endpoint)):
