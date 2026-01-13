@@ -6,12 +6,16 @@ from dataclasses import dataclass
 from logging import getLogger
 from typing import Any
 
-from homeassistant.components.event import EventEntity
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_get as async_get_entity_registry,
+)
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import slugify
 
@@ -24,6 +28,7 @@ from .const import (
     DOMAIN,
     HA_ZOOM_EVENT,
     SIGNAL_NEW_ZOOM_EVENT_TYPE,
+    VALIDATION_EVENT,
 )
 
 _LOGGER = getLogger(__name__)
@@ -87,6 +92,33 @@ async def async_setup_entry(
         )
     )
 
+    # Recreate existing event entities from the registry and add validation entity
+    ent_reg = async_get_entity_registry(hass)
+
+    # Extract event types from existing entities (format: zoom_{name}|{event_type})
+    existing_event_types = {
+        entity.unique_id.split("|", 1)[1]
+        for entity in async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+        if entity.domain == EVENT_DOMAIN and "|" in entity.unique_id
+    }
+
+    # Always include validation event (sent by Zoom every 72 hours for revalidation)
+    existing_event_types.add(VALIDATION_EVENT)
+
+    # Create entities for all event types
+    # Note: er_enabled_default=False only affects initial registration; once a user
+    # enables the entity, their preference is preserved in the entity registry
+    async_add_entities(
+        [
+            ZoomWebhookEventEntity(
+                config_entry,
+                event_type,
+                er_enabled_default=event_type != VALIDATION_EVENT,
+            )
+            for event_type in existing_event_types
+        ]
+    )
+
 
 class ZoomWebhookEventEntity(EventEntity, RestoreEntity):
     """Represents a single Zoom webhook event type."""
@@ -100,6 +132,7 @@ class ZoomWebhookEventEntity(EventEntity, RestoreEntity):
         config_entry: ConfigEntry,
         event_type: str,
         data: dict[str, Any] | None = None,
+        er_enabled_default: bool = True,
     ) -> None:
         """Initialize the event entity."""
         self._config_entry = config_entry
@@ -107,6 +140,7 @@ class ZoomWebhookEventEntity(EventEntity, RestoreEntity):
         self._init_data: dict[str, Any] | None = data
         self._last_payload: dict[str, Any] | None = None
         self._last_event_ts: int | None = None
+        self._attr_entity_registry_enabled_default = er_enabled_default
 
         # Unique ID: zoom_{entry_id}_{slugified_event_type}
         self._attr_unique_id = (

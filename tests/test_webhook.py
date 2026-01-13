@@ -10,7 +10,6 @@ import pytest
 from aiohttp import ClientSession
 from aiohttp.test_utils import TestClient
 
-from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -26,7 +25,7 @@ from custom_components.zoom.const import (
     VALIDATION_EVENT,
 )
 
-from .const import MOCK_CONFIG, MOCK_ENTRY
+from .const import MOCK_CONFIG, MOCK_ENTRY, get_non_validation_event_entities
 
 # Test secret token
 SECRET_TOKEN = MOCK_CONFIG[CONF_SECRET_TOKEN]
@@ -96,12 +95,9 @@ async def test_webhook_missing_headers(
     )
 
     assert response.status == 200
-    # No entities should be created
+    # No new entities should be created (only pre-created validation entity exists)
     ent_reg = er.async_get(hass)
-    event_entities = [
-        e for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
-        if e.domain == EVENT_DOMAIN
-    ]
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 0
 
 
@@ -133,12 +129,9 @@ async def test_webhook_stale_timestamp(
     )
 
     assert response.status == 200
-    # No entities should be created due to stale timestamp
+    # No new entities should be created due to stale timestamp
     ent_reg = er.async_get(hass)
-    event_entities = [
-        e for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
-        if e.domain == EVENT_DOMAIN
-    ]
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 0
 
 
@@ -231,12 +224,9 @@ async def test_webhook_wrong_signature(
     )
 
     assert response.status == 200
-    # No entities should be created due to signature mismatch
+    # No new entities should be created due to signature mismatch
     ent_reg = er.async_get(hass)
-    event_entities = [
-        e for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
-        if e.domain == EVENT_DOMAIN
-    ]
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 0
 
 
@@ -272,12 +262,9 @@ async def test_webhook_valid_presence_event(
     assert response.status == 200
     await hass.async_block_till_done()
 
-    # Event entity should be created
+    # Event entity should be created (excluding pre-created validation entity)
     ent_reg = er.async_get(hass)
-    event_entities = [
-        e for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
-        if e.domain == EVENT_DOMAIN
-    ]
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
     assert CONNECTIVITY_EVENT in event_entities[0].unique_id
 
@@ -416,12 +403,9 @@ async def test_webhook_no_duplicate_entities(
     assert response2.status == 200
     await hass.async_block_till_done()
 
-    # Should still only have one entity
+    # Should still only have one presence entity (excluding validation entity)
     ent_reg = er.async_get(hass)
-    event_entities = [
-        e for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
-        if e.domain == EVENT_DOMAIN
-    ]
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
 
 
