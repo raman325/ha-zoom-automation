@@ -19,10 +19,11 @@ from custom_components.zoom.const import (
     DOMAIN,
     HA_ZOOM_EVENT,
     SIGNAL_NEW_ZOOM_EVENT_TYPE,
+    VALIDATION_EVENT,
 )
 from custom_components.zoom.event import ZoomEventExtraStoredData
 
-from .const import MOCK_ENTRY
+from .const import MOCK_ENTRY, get_non_validation_event_entities
 
 
 def _create_presence_event_data(
@@ -47,6 +48,28 @@ def _create_presence_event_data(
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
+async def test_validation_event_entity_precreated_disabled(hass: HomeAssistant) -> None:
+    """Test that the validation event entity is pre-created but disabled."""
+    MOCK_ENTRY.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    ent_reg = er.async_get(hass)
+
+    # Find the validation event entity
+    validation_entities = [
+        e
+        for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
+        if e.domain == EVENT_DOMAIN and VALIDATION_EVENT in e.unique_id
+    ]
+    assert len(validation_entities) == 1
+    validation_entity = validation_entities[0]
+
+    # Should be disabled by default (disabled_by = INTEGRATION)
+    assert validation_entity.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_event_entity_created_on_signal(hass: HomeAssistant) -> None:
     """Test that an event entity is created when dispatcher signal is sent."""
     MOCK_ENTRY.add_to_hass(hass)
@@ -56,11 +79,8 @@ async def test_event_entity_created_on_signal(hass: HomeAssistant) -> None:
     # Get entity registry
     ent_reg = er.async_get(hass)
 
-    # Initially no event entities
-    event_entities = [
-        e for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
-        if e.domain == EVENT_DOMAIN
-    ]
+    # Initially no event entities (excluding pre-created validation entity)
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 0
 
     # Send dispatcher signal for new event type
@@ -75,11 +95,8 @@ async def test_event_entity_created_on_signal(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # Now we should have one event entity
-    event_entities = [
-        e for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
-        if e.domain == EVENT_DOMAIN
-    ]
+    # Now we should have one event entity (excluding validation)
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
     assert CONNECTIVITY_EVENT in event_entities[0].unique_id
 
@@ -105,11 +122,8 @@ async def test_event_entity_has_correct_attributes(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # Get the entity
-    event_entities = [
-        e for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
-        if e.domain == EVENT_DOMAIN
-    ]
+    # Get the entity (excluding pre-created validation entity)
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
     entity_entry = event_entities[0]
 
@@ -142,12 +156,9 @@ async def test_event_entity_handles_webhook_event(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # Get entity registry entry
+    # Get entity registry entry (excluding pre-created validation entity)
     ent_reg = er.async_get(hass)
-    event_entities = [
-        e for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
-        if e.domain == EVENT_DOMAIN
-    ]
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
     entity_id = event_entities[0].entity_id
 
@@ -187,10 +198,7 @@ async def test_event_entity_filters_by_config_entry(hass: HomeAssistant) -> None
     await hass.async_block_till_done()
 
     ent_reg = er.async_get(hass)
-    event_entities = [
-        e for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
-        if e.domain == EVENT_DOMAIN
-    ]
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     entity_id = event_entities[0].entity_id
 
     # Get initial state
@@ -230,10 +238,7 @@ async def test_event_entity_filters_by_event_type(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     ent_reg = er.async_get(hass)
-    event_entities = [
-        e for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
-        if e.domain == EVENT_DOMAIN
-    ]
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     entity_id = event_entities[0].entity_id
 
     # Get initial state
@@ -253,6 +258,53 @@ async def test_event_entity_filters_by_event_type(hass: HomeAssistant) -> None:
     # State should not have changed
     current_state = hass.states.get(entity_id)
     assert current_state.last_changed == initial_last_changed
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_existing_entities_restored_on_startup(hass: HomeAssistant) -> None:
+    """Test that existing event entities are recreated from registry on startup."""
+    MOCK_ENTRY.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Create entity via dispatcher signal
+    from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+    event_data = _create_presence_event_data(MOCK_ENTRY.entry_id)
+    async_dispatcher_send(
+        hass,
+        f"{SIGNAL_NEW_ZOOM_EVENT_TYPE}|{MOCK_ENTRY.entry_id}",
+        CONNECTIVITY_EVENT,
+        event_data,
+    )
+    await hass.async_block_till_done()
+
+    # Verify entity was created
+    ent_reg = er.async_get(hass)
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    assert len(event_entities) == 1
+    entity_id = event_entities[0].entity_id
+
+    # Unload the entry
+    await hass.config_entries.async_unload(MOCK_ENTRY.entry_id)
+    await hass.async_block_till_done()
+
+    # Entity should still be in registry
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    assert len(event_entities) == 1
+
+    # Reload the entry - entities should be recreated from registry
+    await hass.config_entries.async_setup(MOCK_ENTRY.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify entity still exists with same entity_id
+    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    assert len(event_entities) == 1
+    assert event_entities[0].entity_id == entity_id
+
+    # Verify state is available (entity was properly recreated)
+    state = hass.states.get(entity_id)
+    assert state is not None
 
 
 class TestZoomEventExtraStoredData:
