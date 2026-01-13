@@ -8,18 +8,28 @@ from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.zoom.const import CONF_SECRET_TOKEN, DOMAIN, VALIDATION_EVENT
+from custom_components.zoom.const import (
+    CONF_SECRET_TOKEN,
+    CONNECTIVITY_EVENT,
+    DOMAIN,
+    VALIDATION_EVENT,
+)
+
+# Event types that are pre-created and disabled by default
+_PRECREATED_DISABLED_EVENTS = {VALIDATION_EVENT, CONNECTIVITY_EVENT}
 
 
-def get_non_validation_event_entities(
+def get_non_precreated_event_entities(
     ent_reg: er.EntityRegistry, entry_id: str
 ) -> list[er.RegistryEntry]:
-    """Get event entities excluding the pre-created validation entity."""
+    """Get event entities excluding pre-created disabled entities."""
     return [
         e
         for e in er.async_entries_for_config_entry(ent_reg, entry_id)
-        if e.domain == EVENT_DOMAIN and VALIDATION_EVENT not in e.unique_id
+        if e.domain == EVENT_DOMAIN
+        and not any(evt in e.unique_id for evt in _PRECREATED_DISABLED_EVENTS)
     ]
+
 
 MOCK_CONFIG = {
     CONF_NAME: "test",

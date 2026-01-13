@@ -25,11 +25,15 @@ from .const import (
     ATTR_LAST_EVENT_TS,
     ATTR_LAST_PAYLOAD,
     ATTR_PAYLOAD,
+    CONNECTIVITY_EVENT,
     DOMAIN,
     HA_ZOOM_EVENT,
     SIGNAL_NEW_ZOOM_EVENT_TYPE,
     VALIDATION_EVENT,
 )
+
+# Event types disabled by default (redundant with other entities or internal)
+_DISABLED_BY_DEFAULT_EVENTS = {VALIDATION_EVENT, CONNECTIVITY_EVENT}
 
 _LOGGER = getLogger(__name__)
 
@@ -102,19 +106,16 @@ async def async_setup_entry(
         if entity.domain == EVENT_DOMAIN and "|" in entity.unique_id
     }
 
-    # Always include validation event (sent by Zoom every 72 hours for revalidation)
+    # Always include these events:
+    # - VALIDATION_EVENT: sent by Zoom every 72 hours for revalidation
+    # - CONNECTIVITY_EVENT: used by the binary sensor for presence tracking
     existing_event_types.add(VALIDATION_EVENT)
+    existing_event_types.add(CONNECTIVITY_EVENT)
 
     # Create entities for all event types
-    # Note: er_enabled_default=False only affects initial registration; once a user
-    # enables the entity, their preference is preserved in the entity registry
     async_add_entities(
         [
-            ZoomWebhookEventEntity(
-                config_entry,
-                event_type,
-                er_enabled_default=event_type != VALIDATION_EVENT,
-            )
+            ZoomWebhookEventEntity(config_entry, event_type)
             for event_type in existing_event_types
         ]
     )
@@ -132,7 +133,6 @@ class ZoomWebhookEventEntity(EventEntity, RestoreEntity):
         config_entry: ConfigEntry,
         event_type: str,
         data: dict[str, Any] | None = None,
-        er_enabled_default: bool = True,
     ) -> None:
         """Initialize the event entity."""
         self._config_entry = config_entry
@@ -140,7 +140,11 @@ class ZoomWebhookEventEntity(EventEntity, RestoreEntity):
         self._init_data: dict[str, Any] | None = data
         self._last_payload: dict[str, Any] | None = None
         self._last_event_ts: int | None = None
-        self._attr_entity_registry_enabled_default = er_enabled_default
+
+        # Disable by default for events that are redundant or internal
+        self._attr_entity_registry_enabled_default = (
+            event_type not in _DISABLED_BY_DEFAULT_EVENTS
+        )
 
         # Unique ID: zoom_{entry_id}_{slugified_event_type}
         self._attr_unique_id = (

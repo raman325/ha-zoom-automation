@@ -25,7 +25,7 @@ from custom_components.zoom.const import (
     VALIDATION_EVENT,
 )
 
-from .const import MOCK_CONFIG, MOCK_ENTRY, get_non_validation_event_entities
+from .const import MOCK_CONFIG, MOCK_ENTRY, get_non_precreated_event_entities
 
 # Test secret token
 SECRET_TOKEN = MOCK_CONFIG[CONF_SECRET_TOKEN]
@@ -76,6 +76,21 @@ def _create_validation_payload(plain_token: str = "test_token_123") -> dict:
     return {"plainToken": plain_token}
 
 
+def _create_meeting_payload(meeting_id: str = "meeting123") -> dict:
+    """Create a meeting event payload."""
+    return {
+        "account_id": "account123",
+        "object": {
+            "id": meeting_id,
+            "topic": "Test Meeting",
+        },
+    }
+
+
+# Use meeting.started for tests since CONNECTIVITY_EVENT is disabled by default
+TEST_WEBHOOK_EVENT = "meeting.started"
+
+
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_webhook_missing_headers(
     hass: HomeAssistant, hass_client: pytest.fixture
@@ -97,7 +112,7 @@ async def test_webhook_missing_headers(
     assert response.status == 200
     # No new entities should be created (only pre-created validation entity exists)
     ent_reg = er.async_get(hass)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 0
 
 
@@ -131,7 +146,7 @@ async def test_webhook_stale_timestamp(
     assert response.status == 200
     # No new entities should be created due to stale timestamp
     ent_reg = er.async_get(hass)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 0
 
 
@@ -226,15 +241,15 @@ async def test_webhook_wrong_signature(
     assert response.status == 200
     # No new entities should be created due to signature mismatch
     ent_reg = er.async_get(hass)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 0
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
-async def test_webhook_valid_presence_event(
+async def test_webhook_valid_event_creates_entity(
     hass: HomeAssistant, hass_client: pytest.fixture
 ) -> None:
-    """Test valid presence status update webhook creates event entity."""
+    """Test valid webhook creates event entity."""
     MOCK_ENTRY.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -243,8 +258,8 @@ async def test_webhook_valid_presence_event(
 
     timestamp = str(int(time.time()))
     payload = _create_webhook_payload(
-        CONNECTIVITY_EVENT,
-        payload=_create_presence_payload(),
+        TEST_WEBHOOK_EVENT,
+        payload=_create_meeting_payload(),
     )
     body = json.dumps(payload)
     signature = _generate_signature(SECRET_TOKEN, timestamp, body)
@@ -262,11 +277,11 @@ async def test_webhook_valid_presence_event(
     assert response.status == 200
     await hass.async_block_till_done()
 
-    # Event entity should be created (excluding pre-created validation entity)
+    # Event entity should be created (excluding pre-created disabled entities)
     ent_reg = er.async_get(hass)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
-    assert CONNECTIVITY_EVENT in event_entities[0].unique_id
+    assert TEST_WEBHOOK_EVENT in event_entities[0].unique_id
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
@@ -364,8 +379,8 @@ async def test_webhook_no_duplicate_entities(
     # Send first event
     timestamp = str(int(time.time()))
     payload = _create_webhook_payload(
-        CONNECTIVITY_EVENT,
-        payload=_create_presence_payload(status="In_Meeting"),
+        TEST_WEBHOOK_EVENT,
+        payload=_create_meeting_payload(),
     )
     body = json.dumps(payload)
     signature = _generate_signature(SECRET_TOKEN, timestamp, body)
@@ -385,8 +400,8 @@ async def test_webhook_no_duplicate_entities(
     # Send second event of same type
     timestamp2 = str(int(time.time()))
     payload2 = _create_webhook_payload(
-        CONNECTIVITY_EVENT,
-        payload=_create_presence_payload(status="Available"),
+        TEST_WEBHOOK_EVENT,
+        payload=_create_meeting_payload(meeting_id="meeting456"),
     )
     body2 = json.dumps(payload2)
     signature2 = _generate_signature(SECRET_TOKEN, timestamp2, body2)
@@ -403,9 +418,9 @@ async def test_webhook_no_duplicate_entities(
     assert response2.status == 200
     await hass.async_block_till_done()
 
-    # Should still only have one presence entity (excluding validation entity)
+    # Should still only have one entity for this event type (excluding pre-created)
     ent_reg = er.async_get(hass)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
 
 
