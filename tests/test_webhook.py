@@ -110,7 +110,7 @@ async def test_webhook_missing_headers(
     )
 
     assert response.status == 200
-    # No new entities should be created (only pre-created validation entity exists)
+    # No new entities should be created (only pre-created disabled entities exist)
     ent_reg = er.async_get(hass)
     event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 0

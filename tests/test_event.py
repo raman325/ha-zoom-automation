@@ -73,31 +73,17 @@ async def test_validation_event_entity_precreated_disabled(hass: HomeAssistant) 
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
-async def test_connectivity_event_entity_disabled_by_default(
+async def test_connectivity_event_entity_precreated_disabled(
     hass: HomeAssistant,
 ) -> None:
-    """Test that the connectivity event entity is disabled by default."""
+    """Test that the connectivity event entity is pre-created but disabled."""
     MOCK_ENTRY.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    # Create connectivity event entity via dispatcher
-    from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-    event_data = _create_test_event_data(
-        MOCK_ENTRY.entry_id, event_type=CONNECTIVITY_EVENT
-    )
-    async_dispatcher_send(
-        hass,
-        f"{SIGNAL_NEW_ZOOM_EVENT_TYPE}|{MOCK_ENTRY.entry_id}",
-        CONNECTIVITY_EVENT,
-        event_data,
-    )
-    await hass.async_block_till_done()
-
     ent_reg = er.async_get(hass)
 
-    # Find the connectivity event entity
+    # Find the connectivity event entity (pre-created during setup)
     connectivity_entities = [
         e
         for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
@@ -120,7 +106,7 @@ async def test_event_entity_created_on_signal(hass: HomeAssistant) -> None:
     # Get entity registry
     ent_reg = er.async_get(hass)
 
-    # Initially no event entities (excluding pre-created validation entity)
+    # Initially no event entities (excluding pre-created disabled entities)
     event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 0
 
@@ -136,7 +122,7 @@ async def test_event_entity_created_on_signal(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # Now we should have one event entity (excluding validation)
+    # Now we should have one event entity (excluding pre-created disabled entities)
     event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
     assert TEST_EVENT_TYPE in event_entities[0].unique_id
@@ -163,7 +149,7 @@ async def test_event_entity_has_correct_attributes(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # Get the entity (excluding pre-created validation entity)
+    # Get the entity (excluding pre-created disabled entities)
     event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
     entity_entry = event_entities[0]
