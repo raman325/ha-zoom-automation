@@ -23,24 +23,27 @@ from custom_components.zoom.const import (
 )
 from custom_components.zoom.event import ZoomEventExtraStoredData
 
-from .const import MOCK_ENTRY, get_non_validation_event_entities
+from .const import MOCK_ENTRY, get_non_precreated_event_entities
+
+# Use meeting.started for tests since it's enabled by default
+# (CONNECTIVITY_EVENT is disabled by default as it's redundant with binary_sensor)
+TEST_EVENT_TYPE = "meeting.started"
 
 
-def _create_presence_event_data(
+def _create_test_event_data(
     entry_id: str,
-    user_id: str = "user123",
-    status: str = "In_Meeting",
+    event_type: str = TEST_EVENT_TYPE,
     event_ts: int = 1234567890,
 ) -> dict:
-    """Create a user.presence_status_updated event data dict."""
+    """Create a test event data dict."""
     return {
-        ATTR_EVENT: CONNECTIVITY_EVENT,
+        ATTR_EVENT: event_type,
         ATTR_EVENT_TS: event_ts,
         ATTR_PAYLOAD: {
             "account_id": "account123",
             "object": {
-                "id": user_id,
-                "presence_status": status,
+                "id": "meeting123",
+                "topic": "Test Meeting",
             },
         },
         "ha_config_entry_id": entry_id,
@@ -70,6 +73,30 @@ async def test_validation_event_entity_precreated_disabled(hass: HomeAssistant) 
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
+async def test_connectivity_event_entity_precreated_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the connectivity event entity is pre-created but disabled."""
+    MOCK_ENTRY.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    ent_reg = er.async_get(hass)
+
+    # Find the connectivity event entity (pre-created during setup)
+    connectivity_entities = [
+        e
+        for e in er.async_entries_for_config_entry(ent_reg, MOCK_ENTRY.entry_id)
+        if e.domain == EVENT_DOMAIN and CONNECTIVITY_EVENT in e.unique_id
+    ]
+    assert len(connectivity_entities) == 1
+    connectivity_entity = connectivity_entities[0]
+
+    # Should be disabled by default (redundant with binary sensor)
+    assert connectivity_entity.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_event_entity_created_on_signal(hass: HomeAssistant) -> None:
     """Test that an event entity is created when dispatcher signal is sent."""
     MOCK_ENTRY.add_to_hass(hass)
@@ -79,26 +106,26 @@ async def test_event_entity_created_on_signal(hass: HomeAssistant) -> None:
     # Get entity registry
     ent_reg = er.async_get(hass)
 
-    # Initially no event entities (excluding pre-created validation entity)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    # Initially no event entities (excluding pre-created disabled entities)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 0
 
     # Send dispatcher signal for new event type
     from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-    event_data = _create_presence_event_data(MOCK_ENTRY.entry_id)
+    event_data = _create_test_event_data(MOCK_ENTRY.entry_id)
     async_dispatcher_send(
         hass,
         f"{SIGNAL_NEW_ZOOM_EVENT_TYPE}|{MOCK_ENTRY.entry_id}",
-        CONNECTIVITY_EVENT,
+        TEST_EVENT_TYPE,
         event_data,
     )
     await hass.async_block_till_done()
 
-    # Now we should have one event entity (excluding validation)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    # Now we should have one event entity (excluding pre-created disabled entities)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
-    assert CONNECTIVITY_EVENT in event_entities[0].unique_id
+    assert TEST_EVENT_TYPE in event_entities[0].unique_id
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
@@ -113,26 +140,25 @@ async def test_event_entity_has_correct_attributes(hass: HomeAssistant) -> None:
     # Send dispatcher signal
     from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-    event_data = _create_presence_event_data(MOCK_ENTRY.entry_id)
+    event_data = _create_test_event_data(MOCK_ENTRY.entry_id)
     async_dispatcher_send(
         hass,
         f"{SIGNAL_NEW_ZOOM_EVENT_TYPE}|{MOCK_ENTRY.entry_id}",
-        CONNECTIVITY_EVENT,
+        TEST_EVENT_TYPE,
         event_data,
     )
     await hass.async_block_till_done()
 
-    # Get the entity (excluding pre-created validation entity)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    # Get the entity (excluding pre-created disabled entities)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
     entity_entry = event_entities[0]
 
     # Check entity category is DIAGNOSTIC
     assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
 
-    # Check the entity name contains the formatted event type
-    # "user.presence_status_updated" -> should contain "Presence Status Updated"
-    assert "presence_status_updated" in entity_entry.unique_id
+    # Check the unique_id contains the event type
+    assert TEST_EVENT_TYPE in entity_entry.unique_id
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
@@ -145,27 +171,26 @@ async def test_event_entity_handles_webhook_event(hass: HomeAssistant) -> None:
     # Create entity via dispatcher
     from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-    initial_event_data = _create_presence_event_data(
+    initial_event_data = _create_test_event_data(
         MOCK_ENTRY.entry_id, event_ts=1000000000
     )
     async_dispatcher_send(
         hass,
         f"{SIGNAL_NEW_ZOOM_EVENT_TYPE}|{MOCK_ENTRY.entry_id}",
-        CONNECTIVITY_EVENT,
+        TEST_EVENT_TYPE,
         initial_event_data,
     )
     await hass.async_block_till_done()
 
-    # Get entity registry entry (excluding pre-created validation entity)
+    # Get entity registry entry (excluding pre-created disabled entities)
     ent_reg = er.async_get(hass)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
     entity_id = event_entities[0].entity_id
 
     # Fire a second webhook event
-    second_event_data = _create_presence_event_data(
+    second_event_data = _create_test_event_data(
         MOCK_ENTRY.entry_id,
-        status="Available",
         event_ts=2000000000,
     )
     hass.bus.async_fire(HA_ZOOM_EVENT, second_event_data)
@@ -188,17 +213,17 @@ async def test_event_entity_filters_by_config_entry(hass: HomeAssistant) -> None
     # Create entity for MOCK_ENTRY
     from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-    event_data = _create_presence_event_data(MOCK_ENTRY.entry_id, event_ts=1000000000)
+    event_data = _create_test_event_data(MOCK_ENTRY.entry_id, event_ts=1000000000)
     async_dispatcher_send(
         hass,
         f"{SIGNAL_NEW_ZOOM_EVENT_TYPE}|{MOCK_ENTRY.entry_id}",
-        CONNECTIVITY_EVENT,
+        TEST_EVENT_TYPE,
         event_data,
     )
     await hass.async_block_till_done()
 
     ent_reg = er.async_get(hass)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     entity_id = event_entities[0].entity_id
 
     # Get initial state
@@ -206,10 +231,7 @@ async def test_event_entity_filters_by_config_entry(hass: HomeAssistant) -> None
     initial_last_changed = initial_state.last_changed
 
     # Fire event for a DIFFERENT config entry - should be ignored
-    other_event_data = _create_presence_event_data(
-        "other_entry_id",
-        event_ts=3000000000,
-    )
+    other_event_data = _create_test_event_data("other_entry_id", event_ts=3000000000)
     hass.bus.async_fire(HA_ZOOM_EVENT, other_event_data)
     await hass.async_block_till_done()
 
@@ -225,20 +247,20 @@ async def test_event_entity_filters_by_event_type(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    # Create entity for presence_status_updated
+    # Create entity for meeting.started
     from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-    event_data = _create_presence_event_data(MOCK_ENTRY.entry_id, event_ts=1000000000)
+    event_data = _create_test_event_data(MOCK_ENTRY.entry_id, event_ts=1000000000)
     async_dispatcher_send(
         hass,
         f"{SIGNAL_NEW_ZOOM_EVENT_TYPE}|{MOCK_ENTRY.entry_id}",
-        CONNECTIVITY_EVENT,
+        TEST_EVENT_TYPE,
         event_data,
     )
     await hass.async_block_till_done()
 
     ent_reg = er.async_get(hass)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     entity_id = event_entities[0].entity_id
 
     # Get initial state
@@ -247,7 +269,7 @@ async def test_event_entity_filters_by_event_type(hass: HomeAssistant) -> None:
 
     # Fire a DIFFERENT event type - should be ignored
     different_event_data = {
-        ATTR_EVENT: "meeting.started",
+        ATTR_EVENT: "meeting.ended",
         ATTR_EVENT_TS: 3000000000,
         ATTR_PAYLOAD: {"object": {"id": "meeting123"}},
         "ha_config_entry_id": MOCK_ENTRY.entry_id,
@@ -270,18 +292,18 @@ async def test_existing_entities_restored_on_startup(hass: HomeAssistant) -> Non
     # Create entity via dispatcher signal
     from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-    event_data = _create_presence_event_data(MOCK_ENTRY.entry_id)
+    event_data = _create_test_event_data(MOCK_ENTRY.entry_id)
     async_dispatcher_send(
         hass,
         f"{SIGNAL_NEW_ZOOM_EVENT_TYPE}|{MOCK_ENTRY.entry_id}",
-        CONNECTIVITY_EVENT,
+        TEST_EVENT_TYPE,
         event_data,
     )
     await hass.async_block_till_done()
 
     # Verify entity was created
     ent_reg = er.async_get(hass)
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
     entity_id = event_entities[0].entity_id
 
@@ -290,7 +312,7 @@ async def test_existing_entities_restored_on_startup(hass: HomeAssistant) -> Non
     await hass.async_block_till_done()
 
     # Entity should still be in registry
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
 
     # Reload the entry - entities should be recreated from registry
@@ -298,7 +320,7 @@ async def test_existing_entities_restored_on_startup(hass: HomeAssistant) -> Non
     await hass.async_block_till_done()
 
     # Verify entity still exists with same entity_id
-    event_entities = get_non_validation_event_entities(ent_reg, MOCK_ENTRY.entry_id)
+    event_entities = get_non_precreated_event_entities(ent_reg, MOCK_ENTRY.entry_id)
     assert len(event_entities) == 1
     assert event_entities[0].entity_id == entity_id
 

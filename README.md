@@ -89,6 +89,12 @@ Event entities are created dynamically when the integration receives a new webho
 | Attributes | `event_ts` (timestamp), `payload` (full event payload), `last_event_ts`, `last_payload` (from previous event) |
 | Use Cases | **Automations**: Trigger actions when specific Zoom events occur (meeting started, recording available, etc.). **Troubleshooting**: View the last received payload for debugging webhook issues. **History**: Track when events occurred via entity history. |
 
+**Pre-created entities (disabled by default)**:
+- `endpoint.url_validation` - Zoom's periodic endpoint revalidation (every 72 hours)
+- `user.presence_status_updated` - Presence status changes (redundant with the binary sensor)
+
+These entities can be enabled in the entity registry if needed for automation or debugging.
+
 **Example**: If you subscribe to `meeting.started` events in your Zoom app, an `event.zoom_meeting_started` entity will be created the first time that event is received.
 
 </details>
@@ -174,6 +180,12 @@ Event entities are created dynamically when the integration receives a new webho
 | Purpose | Tracks individual Zoom webhook event types. Each unique event type gets its own entity. |
 | Attributes | `event_ts` (timestamp), `payload` (full event payload), `last_event_ts`, `last_payload` (from previous event) |
 | Use Cases | **Automations**: Trigger actions when specific Zoom events occur (meeting started, recording available, etc.). **Troubleshooting**: View the last received payload for debugging webhook issues. **History**: Track when events occurred via entity history. |
+
+**Pre-created entities (disabled by default)**:
+- `endpoint.url_validation` - Zoom's periodic endpoint revalidation (every 72 hours)
+- `user.presence_status_updated` - Presence status changes (redundant with the binary sensor)
+
+These entities can be enabled in the entity registry if needed for automation or debugging.
 
 **Example**: If you subscribe to `meeting.started` events in your Zoom app, an `event.zoom_meeting_started` entity will be created the first time that event is received.
 
