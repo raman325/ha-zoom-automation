@@ -30,6 +30,10 @@ Because the event name is included in the JSON payload sent to the webhook, you 
 
 Your Home Assistant instance must be externally accessible from the Internet. The `External URL` will also need to be appropriately set and should replace `<BASE_HA_URL>` references in the installation instructions. You can do this in your `configuration.yaml` or through the UI as mentioned [in the docs](https://www.home-assistant.io/docs/configuration/basic/).
 
+### Home Assistant Cloud (Nabu Casa) Users
+
+If you have a [Home Assistant Cloud](https://www.nabucasa.com/) subscription, this integration will use your Nabu Casa cloud URL (e.g., `https://<unique-id>.ui.nabu.casa`) instead of your configured external URL. When setting up your Zoom app, use your **Nabu Casa cloud URL** for the `Redirect URL for OAuth` and `Allow List` entries, not your external URL.
+
 ### Enterprise/Corporate Account Restrictions
 
 If your Zoom account is managed by an organization (Enterprise or Corporate accounts), your administrator may restrict certain capabilities. This integration requires the ability to:
@@ -97,8 +101,8 @@ Event entities are created dynamically when the integration receives a new webho
 2. Click on `Create` in the OAuth card.
 3. Enter an application name of your choice, select `User-managed app`, deselect `Would you like to publish this app on Zoom App Marketplace?`, and then click on `Create`.
 4. Copy your `Client ID` and `Client Secret` somewhere as you will need them later to configure Home Assistant.
-5. Enter the following `Redirect URL for OAuth`: `<BASE_HA_URL>/auth/external/callback` (replace `<BASE_HA_URL>` with the URL you configured inside of Home Assistant as the external URL, e.g. `https://ha.example.com`)
-6. Enter your `<BASE_HA_URL>` in the `Add Allow List` section, then hit `Continue`.
+5. Enter the following `Redirect URL for OAuth`: `<BASE_HA_URL>/auth/external/callback` (replace `<BASE_HA_URL>` with your Nabu Casa cloud URL if you have Home Assistant Cloud, otherwise use your configured external URL, e.g. `https://ha.example.com`)
+6. Enter your `<BASE_HA_URL>` in the `Add Allow List` section (use the same URL as step 5), then hit `Continue`.
 7. The `App Name` should already be filled out. A `Short Description` and `Long Description` are required, but since this app is only for you, it doesn't matter what you enter here. You will also need to add a `Name` and `Email Address` in the `Developer Contact Information` section. Click `Continue` once you are done.
 8. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
 9. Enter a name for this subscription (does not matter).
@@ -183,8 +187,8 @@ Event entities are created dynamically when the integration receives a new webho
 2. Click on `Create` in the OAuth card.
 3. Enter an application name of your choice, select `User-managed app`, deselect `Would you like to publish this app on Zoom App Marketplace?`, and then click on `Create`.
 4. Copy your `Client ID` and `Client Secret` somewhere as you will need them later to configure Home Assistant.
-5. Enter the following `Redirect URL for OAuth`: `<BASE_HA_URL>/auth/external/callback` (replace `<BASE_HA_URL>` with the URL you configured inside of Home Assistant as the external URL, e.g. `https://ha.example.com`)
-6. Enter your `<BASE_HA_URL>` in the `Whitelist URL` section, then hit `Continue`.
+5. Enter the following `Redirect URL for OAuth`: `<BASE_HA_URL>/auth/external/callback` (replace `<BASE_HA_URL>` with your Nabu Casa cloud URL if you have Home Assistant Cloud, otherwise use your configured external URL, e.g. `https://ha.example.com`)
+6. Enter your `<BASE_HA_URL>` in the `Whitelist URL` section (use the same URL as step 5), then hit `Continue`.
 7. The `App Name` should already be filled out. A `Short Description` and `Long Description` are required, but since this app is only for you, it doesn't matter what you enter here. You will also need to add a `Name` and `Email Address` in the `Developer Contact Information` section. Click `Continue` once you are done.
 8. Make note of the `Secret Token` found under `Features` > `Access` as you will need it for your configuration later.
 9. Enable `Event Subscriptions` and click on `Add new event subscriptions`.
