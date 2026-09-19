@@ -24,6 +24,7 @@ from homeassistant.util.dt import utcnow
 
 from .common import ZoomAPI, ZoomUserProfileDataUpdateCoordinator, get_contact_name
 from .const import (
+    ALL_CONNECTIVITY_STATUSES,
     API,
     ATTR_EVENT,
     CONF_CONNECTIVITY_ON_STATUSES,
@@ -33,10 +34,13 @@ from .const import (
     DEFAULT_CONNECTIVITY_ON_STATUSES,
     DOMAIN,
     HA_ZOOM_EVENT,
+    POLLED_STATUS_ALIASES,
     USER_PROFILE_COORDINATOR,
 )
 
 _LOGGER = getLogger(__name__)
+
+ISSUE_URL = "https://github.com/raman325/ha-zoom-automation/issues"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 PARALLEL_UPDATES = 5
@@ -86,6 +90,7 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         self._profile = None
         self._zoom_event_state = None
         self._last_webhook_dt: datetime | None = None
+        self._unknown_status: str | None = None
         self._is_on = False
 
         self._attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
@@ -99,6 +104,27 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
             self._last_webhook_dt is not None
             and utcnow() - self._last_webhook_dt < WEBHOOK_GRACE_PERIOD
         )
+
+    def _normalize_polled_status(self, status: str | None) -> str | None:
+        """Translate a polled status, returning None if it is unknown."""
+        status = POLLED_STATUS_ALIASES.get(status, status)
+        if status in ALL_CONNECTIVITY_STATUSES:
+            return status
+
+        # A webhook is an event - it says the status just became X, and an X
+        # we don't recognise is fair evidence the user isn't on a call. A
+        # profile response is only a cross-check, so a status we can't
+        # interpret is no evidence and must not be allowed to clear the state.
+        if status != self._unknown_status:
+            self._unknown_status = status
+            _LOGGER.warning(
+                "Zoom's user profile reports presence status %s, which this "
+                "integration doesn't recognise; leaving the state unchanged. "
+                "Please report this at %s",
+                status,
+                ISSUE_URL,
+            )
+        return None
 
     async def _async_update(self, now) -> None:
         """Update state of entity."""
@@ -126,8 +152,12 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         # arrives, so the poll has to be able to correct it - not only when
         # recovering from an outage. Skip the correction right after an event,
         # since the API can still be reporting the status the webhook replaced.
-        status = self._profile.get("presence_status")
-        if status != self._zoom_event_state and not self._in_webhook_grace_period():
+        status = self._normalize_polled_status(self._profile.get("presence_status"))
+        if (
+            status is not None
+            and status != self._zoom_event_state
+            and not self._in_webhook_grace_period()
+        ):
             _LOGGER.debug(
                 "Polled status %s doesn't match last known status %s, correcting",
                 status,
@@ -187,17 +217,22 @@ class ZoomBaseBinarySensor(RestoreEntity, BinarySensorEntity):
         if self.id:
             try:
                 self._profile = await self._api.async_get_contact_user_profile(self.id)
-                status = self._profile["presence_status"]
+                status = self._normalize_polled_status(
+                    self._profile.get("presence_status")
+                )
                 _LOGGER.debug("Retrieved initial Zoom status: %s", status)
-                self._set_state(status)
-                self.async_write_ha_state()
+                if status is None:
+                    await self._restore_state()
+                else:
+                    self._set_state(status)
+                    self.async_write_ha_state()
             except HTTPUnauthorized:
                 _LOGGER.debug(
                     "User is unauthorized to query presence status, restoring state.",
                     exc_info=True,
                 )
                 await self._restore_state()
-            except:
+            except Exception:
                 _LOGGER.warning(
                     "Error retrieving initial zoom status, restoring state.",
                     exc_info=True,

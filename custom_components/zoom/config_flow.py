@@ -17,6 +17,7 @@ from .const import (
     CONF_CONNECTIVITY_ON_STATUSES,
     CONF_SECRET_TOKEN,
     CONF_VERIFICATION_TOKEN,
+    DEFAULT_CONNECTIVITY_ON_STATUSES,
     DEFAULT_NAME,
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -39,10 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 class ZoomOptionsFlow(config_entries.OptionsFlow):
     """Options flow for Zoom integration."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize zoom options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] = None
     ) -> dict[str, Any]:
@@ -56,9 +53,10 @@ class ZoomOptionsFlow(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_CONNECTIVITY_ON_STATUSES,
-                        default=self.config_entry.options[
-                            CONF_CONNECTIVITY_ON_STATUSES
-                        ],
+                        default=self.config_entry.options.get(
+                            CONF_CONNECTIVITY_ON_STATUSES,
+                            DEFAULT_CONNECTIVITY_ON_STATUSES,
+                        ),
                     ): cv.multi_select(ALL_CONNECTIVITY_STATUSES)
                 }
             ),
@@ -79,7 +77,7 @@ class ZoomOAuth2FlowHandler(
         config_entry: config_entries.ConfigEntry,
     ) -> ZoomOptionsFlow:
         """Get the options flow for this handler."""
-        return ZoomOptionsFlow(config_entry)
+        return ZoomOptionsFlow()
 
     @property
     def logger(self) -> logging.Logger:

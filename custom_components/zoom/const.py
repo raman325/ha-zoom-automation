@@ -67,6 +67,15 @@ ALL_CONNECTIVITY_STATUSES = [
 ]
 DEFAULT_CONNECTIVITY_ON_STATUSES = ["In_Meeting", "Presenting", "On_Phone_Call"]
 
+# The user profile endpoint and the webhook don't use the same spelling for
+# every presence status, and only the webhook's spellings appear in
+# ALL_CONNECTIVITY_STATUSES - and therefore in a user's configured "on"
+# statuses. A polled status has to be translated before it can be compared to
+# one. Zoom does not document the difference; these are observed values.
+POLLED_STATUS_ALIASES = {
+    "In_A_Meeting": "In_Meeting",
+}
+
 HA_ZOOM_EVENT = f"{DOMAIN}_webhook"
 
 WEBHOOK_RESPONSE_SCHEMA = vol.Schema(
