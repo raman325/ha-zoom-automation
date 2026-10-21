@@ -1,6 +1,7 @@
 {
     "domain": "zoom",
     "name": "Zoom",
+    "categories": ["productivity_information", "presence_location"],
     "codeowners": ["@raman325"],
     "config_flow": true,
     "dependencies": ["http", "auth"],
